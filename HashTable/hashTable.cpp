@@ -1,7 +1,7 @@
 #include "hashTable.h"
 
 HashTable*
-HashTableCtor (int size, int (*HashFunc)(ELEM_T data))
+HashTableCtor (int size, unsigned long long (*HashFunc)(ELEM_T data))
 {
     HashTable* hashTable = (HashTable*) calloc (1, sizeof (HashTable));
     assert (hashTable);
@@ -11,19 +11,16 @@ HashTableCtor (int size, int (*HashFunc)(ELEM_T data))
     hashTable->nElem       = 0;
     hashTable->nUniqueElem = 0;
 
-    hashTable->list = ListStructCtor ();
+    hashTable->list = (List**) calloc ((size_t)size, sizeof (List*));
     assert (hashTable->list);
-
-    Elem elem = { .elem     = List::DATA_POISON.elem,
-                  .lenElem  = List::DATA_POISON.lenElem,
-                  .nElem    = 0 };
 
     /**
      * Filling in the hash table header
      */
     for (int i = 0; i < size; i++)
     {
-        ListInsert (hashTable->list, 0, elem);
+        hashTable->list[i] = ListStructCtor ();
+        assert (hashTable->list[i]);
     }
 
     return hashTable;
@@ -34,8 +31,10 @@ HashTableDtor (HashTable* hashTable)
 {
     if (hashTable == nullptr) return 0;
 
-    ListStructDtor (hashTable->list);
+    for (int i = 0; i < hashTable->size; i++)
+        ListStructDtor (hashTable->list[i]);
 
+    free (hashTable->list);
     hashTable->list        = nullptr;
     hashTable->HashFunc    = nullptr;
     hashTable->size        = 0;
@@ -50,12 +49,16 @@ HashTableDtor (HashTable* hashTable)
 int
 HashTableInsert (HashTable* hashTable, ELEM_T value, int lenElem)
 {
-    int indexList = hashTable->HashFunc (value);
-    hashTable->nElem++;   /// | ///
+    assert (hashTable);
+
+    int indexList = abs((int)hashTable->HashFunc (value)) % hashTable->size;
+    assert (indexList >= 0);
+    assert (indexList < hashTable->size);
+    
+    hashTable->nElem++;   
+                          /// | ///
                           /// v ///
-    int indexElem = ListFindInNElem (hashTable->list,
-                                     hashTable->list->next[indexList],
-                                     hashTable->list->data[indexList + 1].nElem,
+    int indexElem = ListFindInNElem (hashTable->list[indexList],
                                      value,
                                      lenElem);
 
@@ -63,15 +66,15 @@ HashTableInsert (HashTable* hashTable, ELEM_T value, int lenElem)
                             /// enum  - fe (ListFindInNElemReturn - ?)
                             /// ?
     {
-        (hashTable->list->data[indexElem].nElem)++;
+        (hashTable->list[indexList]->data[indexElem].nElem)++;
         return indexList;
     }
 
     hashTable->nUniqueElem++;
-    hashTable->list->data[indexList + 1].nElem++;
+    // hashTable->list->data[indexList + 1].nElem++;
 
     Elem elem = { .elem = value, .lenElem = lenElem, .nElem = 1 };
-    ListInsert (hashTable->list, indexList, elem);
+    ListInsert (hashTable->list[indexList], 0, elem);
 
     return indexList;
 }
@@ -86,7 +89,8 @@ int HashTablePrintSize (HashTable* hashTable, const char* nameFile)
 
     for (int i = 0; i < hashTable->size; i++)
     {
-        fprintf (fp, "%d\n", hashTable->list->data[i + 1].nElem);
+        fprintf (fp, "%d\n", hashTable->list[i]->size);
+        // fprintf (fp, "%d\n", hashTable->list->data[i + 1].nElem);
     }
 
     fclose (fp);
@@ -96,11 +100,19 @@ int HashTablePrintSize (HashTable* hashTable, const char* nameFile)
 
 int HashTableDump (HashTable* hashTable)
 {
+    assert (hashTable);
+    
     printf ("\n\n!!!       HashTableDump      !!!\n");
 
-    printf ("list  ");
-    ListStructDump (hashTable->list);
-    printf ("\n");
+    for (int i = 0; i < hashTable->size; i++)
+    {
+        printf ("list %d\n", i);
+        if (hashTable->list[i]->size != 0)
+        {
+            ListStructDump (hashTable->list[i]);
+            printf ("\n\n\n");
+        }
+    }
 
     printf ("\n");
 

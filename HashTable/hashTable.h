@@ -8,8 +8,8 @@
 
 struct HashTable
 {
-    List* list;
-    int (*HashFunc)(ELEM_T data);
+    List** list;
+    unsigned long long (*HashFunc)(ELEM_T data);
     int size;
     int nElem;              // number of elem with duplicate
     int nUniqueElem;
@@ -17,7 +17,7 @@ struct HashTable
 
 HashTable*
 HashTableCtor (int size,
-               int (*HashFunc)(ELEM_T data));
+               unsigned long long (*HashFunc)(ELEM_T data));
 
 int
 HashTableDtor (HashTable* hashTable);

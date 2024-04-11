@@ -23,12 +23,12 @@ typedef Elem LIST_T;
 struct List
 {
     LIST_T* data;
-    int*    next;
-    int*    prev;
+    // int*    next;
+    // int*    prev;
 
     int capacity;
     int size;
-    int free;
+    // int free;
                ///
     static constexpr LIST_T DATA_POISON = { nullptr, -1, -1};
     static const     int    PREV_POISON = -1;
@@ -66,8 +66,6 @@ ListInsert (List* list,
 
 int
 ListFindInNElem (List* list,
-                 int initialIndex,
-                 int nElem,
                  ELEM_T value,
                  int lenElem);
 

@@ -1,11 +1,15 @@
 a.exe:
-	g++ main.cpp					  \
-		HashTable/list.cpp            \
-		HashTable/hashs.cpp 	      \
-		HashTable/hashTable.cpp       \
-		FileProcess/fileProcess.cpp   \
+	g++ main.cpp					  	\
+		HashTable/list.cpp            	\
+		HashTable/hashs.cpp 	      	\
+		HashTable/hashTable.cpp       	\
+		FileProcess/fileProcess.cpp   	\
+		tests/testProcess.cpp			\
 		-o a.exe -O2 $(FLAGS)
 
+
+# $ perf record --call-graph=dwarf ./a.exe 4
+# $ perf report
 
 .PHONY: a.exe
 
@@ -74,6 +78,6 @@ FLAGS = -D											\
 		-fPIE										\
 		-fsized-deallocation						\
 		-fstack-protector							\
-		-fstrict-overflow							\
+		-fstrict-overflow							
 		-fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,leak,nonnull-attribute,null,object-size,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr
 		
