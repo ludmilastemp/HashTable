@@ -7,7 +7,7 @@
 #include <assert.h>
 #include "list.h"
 
-const int sizeHashTable = 1013;
+const int sizeHashTable = 35;//4013;
 
 unsigned long long Hash1 (ELEM_T data);
 unsigned long long Hash2 (ELEM_T data);

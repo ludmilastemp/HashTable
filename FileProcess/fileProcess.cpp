@@ -122,3 +122,42 @@ int STL_Fclose (struct File* file)
     return 0;
 }
 
+File* BufferProcess (File* file)
+{
+    assert (file);
+
+    File* fileNew = (File*) calloc (1, sizeof (File));
+    assert (fileNew);
+
+    fileNew->name     = file->name;
+    fileNew->nStrings = file->nStrings;
+    fileNew->size     = (size_t)file->nStrings * sizeof (char) * 16 * 2; /// copypasta
+
+    fileNew->buffer = (char*) calloc ((size_t)fileNew->nStrings, sizeof (char) * 16 * 2);
+    assert (fileNew->buffer);
+    
+    fileNew->strings = (String*) calloc ((size_t)fileNew->nStrings, sizeof (String));
+    assert (fileNew->strings);
+
+    int iBuf = 0;
+    for (int i = 0; i < fileNew->nStrings; i++, iBuf += 16)
+    {
+        fileNew->strings[i].str = fileNew->buffer + iBuf;
+
+        int j = 0;
+        for (; j < file->strings[i].len; j++)
+            fileNew->buffer[iBuf + j] = file->strings[i].str[j];
+
+        for (; j < 16; j++)
+            fileNew->buffer[iBuf + j] = 0;
+        
+        if (file->strings[i].len > 16 - 1)
+        {
+            for (; j < 16 * 2; j++)
+                fileNew->buffer[iBuf + j] = 0;
+            iBuf += 16;
+        }
+    }
+
+    return fileNew;
+}

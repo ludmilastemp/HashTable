@@ -3,80 +3,80 @@
 #include "HashTable/hashTable.h"
 #include "HashTable/hashs.h"
 #include "tests/testProcess.h"
+#include "plot/buildPlot.h"
 #include <emmintrin.h>
-                                        /// % in hash delete in func
+                                       
 int main (const int argc, const char** argv)
 {
-    File* file = STL_SplitFileIntoLines ("test2.txt");
+    if (argc == 1) return 0;
+
+    if (argv[1][0] == '0')
+    {                                         /// v< number of hash func
+        BuildPlotAllHashTable ("plot/plotAll.py", 6, sizeHashTable);
+        return 0;
+    }
+
+    File* file = STL_SplitFileIntoLines ("test.txt");
     assert (file);
 
-    int nHashFunc = 1;
-    if (argc != 1) nHashFunc = (argv[1][0] - '0');
+    File* fileNew = BufferProcess (file);
+    assert (fileNew);
+    STL_Fclose (file);
+    file = fileNew;
 
-    unsigned long long (*HashFunc)(ELEM_T data) = nullptr;
-
-        /// array with ptr (��� ����� ���������, �� ����� ��� ������) // 
-    switch (nHashFunc)
+    unsigned long long (*hashArray[7])(ELEM_T data) = 
     {
-        case 1: HashFunc = &Hash1; break;
-        case 2: HashFunc = &Hash2; break;
-        case 3: HashFunc = &Hash3; break;
-        case 4: HashFunc = &Hash4; break;
-        case 5: HashFunc = &Hash5; break;
-        case 6: HashFunc = &Hash6; break;
-        case 7: HashFunc = &Hash7; break;
-        default: return 0;
+        &Hash1,
+        &Hash2,
+        &Hash3,
+        &Hash4,
+        &Hash5,
+        &Hash6,
+        &Hash7
+    };
+
+    char nameFileWithResults[] = "tests/hash0.txt"; 
+    char nameFileWithPlot[]    = "plot/plot0.py";
+
+    int iArgc = 2;
+    while (iArgc <= argc)
+    {
+        int nHashFunc = (argv[iArgc - 1][0] - '0');
+        if (nHashFunc < 0 || nHashFunc > 7) break;
+        iArgc++;
+
+        printf ("\n\nnHashFunc = %d\n", nHashFunc);
+
+        HashTable* hashTable = HashTableCtor (sizeHashTable, hashArray[nHashFunc - 1]);
+        assert (hashTable);
+
+        /**
+         * Filling the hash table
+         */
+        int iBuf = 0;
+        for (int i = 0; i < file->nStrings; i++)
+        {
+            int len = 16;
+            if (file->strings[i].str[16 - 1] != 0) len += 16;
+
+            HashTableInsert (hashTable, file->buffer + iBuf, len);
+            // HashTableInsert (hashTable, file->strings[i].str, len);
+
+            iBuf += len;
+        }
+
+        printf ("\n\n%d\n\n", hashTable->nUniqueElem);
+
+        // HashTableDump (hashTable);
+
+        sprintf (nameFileWithResults, "tests/hash%d.txt", nHashFunc);
+        HashTablePrintSize (hashTable, nameFileWithResults); 
+        
+        sprintf (nameFileWithPlot, "plot/plot%d.py", nHashFunc);
+        BuildPlotOneHashTable (nameFileWithPlot, hashTable);
+
+        HashTableDtor (hashTable);
     }
-
-    HashTable* hashTable = HashTableCtor (sizeHashTable, HashFunc);
-    assert (hashTable);
-
-    // HashTableDump (hashTable);
-
-    /**
-     * Filling the hash table
-     */
-    for (int i = 0; i < file->nStrings; i++)
-    {
-        //  printf ("i = %d\n", i);
-        HashTableInsert (hashTable, file->strings[i].str, file->strings[i].len);
-    }
-
-    //return 0;
-
-    // HashTableDump (hashTable);
-
-    const char* nameFileWithResults = nullptr;
-    switch (nHashFunc)
-    {
-        case 1: nameFileWithResults = "tests/hash1.txt"; break;
-        case 2: nameFileWithResults = "tests/hash2.txt"; break;
-        case 3: nameFileWithResults = "tests/hash3.txt"; break;
-        case 4: nameFileWithResults = "tests/hash4.txt"; break;
-        case 5: nameFileWithResults = "tests/hash5.txt"; break;
-        case 6: nameFileWithResults = "tests/hash6.txt"; break;
-        case 7: nameFileWithResults = "tests/hash7.txt"; break;
-        default: return 0;
-    }       /// copypasta too
-
-    HashTablePrintSize (hashTable, nameFileWithResults); 
-    
-    const char* nameFileWithPlot = nullptr;
-    switch (nHashFunc)
-    {
-        case 1: nameFileWithPlot = "plot/plot1.py"; break;
-        case 2: nameFileWithPlot = "plot/plot2.py"; break;
-        case 3: nameFileWithPlot = "plot/plot3.py"; break;
-        case 4: nameFileWithPlot = "plot/plot4.py"; break;
-        case 5: nameFileWithPlot = "plot/plot5.py"; break;
-        case 6: nameFileWithPlot = "plot/plot6.py"; break;
-        case 7: nameFileWithPlot = "plot/plot7.py"; break;
-        default: return 0;
-    }       /// copypasta too
-
-    TestProcessOneHashTable (nameFileWithPlot, hashTable);
-
-    HashTableDtor (hashTable);
 
     STL_Fclose (file);
 

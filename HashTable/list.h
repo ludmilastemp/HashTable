@@ -16,6 +16,10 @@ struct Elem
     ELEM_T elem;
     int    lenElem;
     int    nElem;       /// number of duplicate
+
+    static constexpr ELEM_T DATA_POISON     = nullptr;
+    static const     int    LEN_ELEM_POISON = -1;
+    static const     int    N_ELEM_POISON   = -1;      
 };
 
 typedef Elem LIST_T;
@@ -23,30 +27,11 @@ typedef Elem LIST_T;
 struct List
 {
     LIST_T* data;
-    // int*    next;
-    // int*    prev;
 
     int capacity;
     int size;
-    // int free;
-               ///
-    static constexpr LIST_T DATA_POISON = { nullptr, -1, -1};
-    static const     int    PREV_POISON = -1;
-};
 
-enum ListError
-{
-    DATA_NULLPTR,
-    NEXT_NULLPTR,
-    PREV_NULLPTR,
-    INCORRECT_CAPACITY,
-    INCORRECT_SIZE,
-    INCORRECT_FREE,
-    INCORRECT_DATA_DATA,
-    INCORRECT_NEXT_DATA,
-    INCORRECT_PREV_DATA,
-    FOUND_CYCLE,
-    NO_SYMMETRY,
+    static const int ELEM_NOT_FOUND = -1;
 };
 
 static const int LIST_INITIAL_CAPACITY  = 4;
@@ -61,13 +46,12 @@ ListStructDtor (List* list);
 
 int
 ListInsert (List* list,
-            int index,
             LIST_T value);
 
 int
-ListFindInNElem (List* list,
-                 ELEM_T value,
-                 int lenElem);
+ListFindElem (List* list,
+              ELEM_T value,
+              int lenElem);
 
 int
 ListStructVerificator (List* list);

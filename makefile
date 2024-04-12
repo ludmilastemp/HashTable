@@ -5,9 +5,10 @@ a.exe:
 		HashTable/hashTable.cpp       	\
 		FileProcess/fileProcess.cpp   	\
 		tests/testProcess.cpp			\
+		plot/buildPlot.cpp				\
 		-o a.exe -O2 $(FLAGS)
 
-
+# sudo sysctl kernel.perf_event_paranoid=-1
 # $ perf record --call-graph=dwarf ./a.exe 4
 # $ perf report
 

@@ -33,4 +33,7 @@ STL_SplitFileIntoLines (const char* nameFile);
 int /// File* ... return nullptr;
 STL_Fclose (struct File* file);
 
+File* 
+BufferProcess (File* file);
+
 #endif /* STL_file_process_ */

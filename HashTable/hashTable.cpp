@@ -52,29 +52,29 @@ HashTableInsert (HashTable* hashTable, ELEM_T value, int lenElem)
     assert (hashTable);
 
     int indexList = abs((int)hashTable->HashFunc (value)) % hashTable->size;
+    
     assert (indexList >= 0);
     assert (indexList < hashTable->size);
     
     hashTable->nElem++;   
-                          /// | ///
-                          /// v ///
-    int indexElem = ListFindInNElem (hashTable->list[indexList],
-                                     value,
-                                     lenElem);
 
-    if (indexElem != -1)    /// const - fe
-                            /// enum  - fe (ListFindInNElemReturn - ?)
-                            /// ?
+    int indexElem = ListFindElem (hashTable->list[indexList],
+                                  value,
+                                  lenElem);
+
+    if (indexElem != List::ELEM_NOT_FOUND)    
+                            /// const - fe
+                            /// enum  - fe (ListFindElemReturn - ?)
+                            /// const in struct
     {
         (hashTable->list[indexList]->data[indexElem].nElem)++;
         return indexList;
     }
 
     hashTable->nUniqueElem++;
-    // hashTable->list->data[indexList + 1].nElem++;
 
     Elem elem = { .elem = value, .lenElem = lenElem, .nElem = 1 };
-    ListInsert (hashTable->list[indexList], 0, elem);
+    ListInsert (hashTable->list[indexList], elem);
 
     return indexList;
 }
@@ -88,10 +88,7 @@ int HashTablePrintSize (HashTable* hashTable, const char* nameFile)
     assert (fp);
 
     for (int i = 0; i < hashTable->size; i++)
-    {
         fprintf (fp, "%d\n", hashTable->list[i]->size);
-        // fprintf (fp, "%d\n", hashTable->list->data[i + 1].nElem);
-    }
 
     fclose (fp);
 
