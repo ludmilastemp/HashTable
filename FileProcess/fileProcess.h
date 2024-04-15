@@ -6,14 +6,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <sys/stat.h>
-
-struct String  /// word - ?
-{
-    const char* str;
-    int         len;
-}; 
-// a  - 1
-// strcmp ("a", "and") = 0 
+#include "../HashTable/hashs.h"
 
 struct File
 {
@@ -21,19 +14,15 @@ struct File
     char*       buffer;
     size_t      size;
     int         nStrings;
-    String*     strings;
 };
 
 File*
 STL_Fread (const char* nameFile);
 
-File*
-STL_SplitFileIntoLines (const char* nameFile);
-
-int /// File* ... return nullptr;
-STL_Fclose (struct File* file);
-
 File* 
-BufferProcess (File* file);
+FileProcess (const char* nameFile);
+
+File*
+STL_Fclose (struct File* file);
 
 #endif /* STL_file_process_ */

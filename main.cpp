@@ -16,22 +16,19 @@ int main (const int argc, const char** argv)
         return 0;
     }
 
-    File* file = STL_SplitFileIntoLines ("test.txt");
+    File* file = FileProcess ("test.txt");
     assert (file);
 
-    File* fileNew = BufferProcess (file);
-    assert (fileNew);
-    STL_Fclose (file);
-    file = fileNew;
+    printf ("nStrings = %d\n", file->nStrings);
 
     unsigned long long (*hashArray[7])(ELEM_T data) = 
     {
-        &Hash1,
-        &Hash2,
-        &Hash3,
-        &Hash4,
-        &Hash5,
-        &Hash6,
+        &HashReturn0,
+        &HashLetterASCII,
+        &HashStrlen,
+        &HashSumLetterASCII,
+        &HashRor,
+        &HashRol,
         &Hash7
     };
 
@@ -57,11 +54,9 @@ int main (const int argc, const char** argv)
         for (int i = 0; i < file->nStrings; i++)
         {
             int len = 16;
-            if (file->strings[i].str[16 - 1] != 0) len += 16;
+            if (file->buffer[iBuf + 16 - 1] != 0) len += 16;
 
             HashTableInsert (hashTable, file->buffer + iBuf, len);
-            // HashTableInsert (hashTable, file->strings[i].str, len);
-
             iBuf += len;
         }
 

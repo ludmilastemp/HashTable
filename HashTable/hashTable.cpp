@@ -1,10 +1,12 @@
 #include "hashTable.h"
 
+// MM: int64_t hash_t
 HashTable*
-HashTableCtor (int size, unsigned long long (*HashFunc)(ELEM_T data))
+HashTableCtor (int /* M: size_t */ size, unsigned long long (*HashFunc)(ELEM_T data))
 {
+    // size == -1?
     HashTable* hashTable = (HashTable*) calloc (1, sizeof (HashTable));
-    assert (hashTable);
+    assert (hashTable); // M: error?
 
     hashTable->HashFunc    = HashFunc;
     hashTable->size        = size;
@@ -12,7 +14,7 @@ HashTableCtor (int size, unsigned long long (*HashFunc)(ELEM_T data))
     hashTable->nUniqueElem = 0;
 
     hashTable->list = (List**) calloc ((size_t)size, sizeof (List*));
-    assert (hashTable->list);
+    assert (hashTable->list); // M: error?
 
     /**
      * Filling in the hash table header
@@ -35,6 +37,7 @@ HashTableDtor (HashTable* hashTable)
         ListStructDtor (hashTable->list[i]);
 
     free (hashTable->list);
+    
     hashTable->list        = nullptr;
     hashTable->HashFunc    = nullptr;
     hashTable->size        = 0;
@@ -51,7 +54,7 @@ HashTableInsert (HashTable* hashTable, ELEM_T value, int lenElem)
 {
     assert (hashTable);
 
-    int indexList = abs((int)hashTable->HashFunc (value)) % hashTable->size;
+    int indexList = abs(hashTable->HashFunc (value)) % hashTable->size; // M: size_t? capacity?
     
     assert (indexList >= 0);
     assert (indexList < hashTable->size);
@@ -79,13 +82,14 @@ HashTableInsert (HashTable* hashTable, ELEM_T value, int lenElem)
     return indexList;
 }
         /// rename - ?
+	// HashTableDumpListsToFile()
 int HashTablePrintSize (HashTable* hashTable, const char* nameFile)
 {
     assert (hashTable);
     assert (nameFile);
 
     FILE* fp = fopen (nameFile, "w");
-    assert (fp);
+    assert (fp); // M: error?
 
     for (int i = 0; i < hashTable->size; i++)
         fprintf (fp, "%d\n", hashTable->list[i]->size);

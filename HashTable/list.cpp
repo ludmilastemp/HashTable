@@ -4,7 +4,7 @@ List*
 ListStructCtor ()
 {
     List* list = (List*) calloc (1, sizeof (List));
-    assert (list);
+    assert (list); // M: error?
 
     list->capacity = LIST_INITIAL_CAPACITY;
 
@@ -57,8 +57,10 @@ ListFindElem (List* list, ELEM_T value, int lenElem)
     for (int i = 0; i < list->size; i++)
     {
         if (list->data[i].lenElem == lenElem &&
-            strncmp (value, list->data[i].elem, (size_t)lenElem) == 0)
+	    strncmp (value, list->data[i].elem, (size_t)lenElem) == 0)
+	{
             return i;
+	}
     }
     return List::ELEM_NOT_FOUND;
 }
@@ -96,8 +98,6 @@ int ListStructDump (List* list)
     return 0;
 }
 
-#define ERROR(x) printf ("ERROR!!! " #x "\n")
-
 int ListStructRealloc (List *list)
 {
     assert (list);
@@ -105,7 +105,7 @@ int ListStructRealloc (List *list)
     list->capacity *= LIST_EXPAND_MULTIPLIER;
 
     list->data = (LIST_T*) realloc (list->data, (size_t)list->capacity * sizeof (LIST_T));
-    if (list->data == nullptr) ERROR (DATA_NULLPTR);
+    if (list->data == nullptr) printf ("ERROR!!! DATA_NULLPTR\n");
     assert (list->data);
 
     for (int i = list->capacity / LIST_EXPAND_MULTIPLIER; i < list->capacity; ++i)
