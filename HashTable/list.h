@@ -7,64 +7,49 @@
 #include <assert.h>
 #include "config.h" 
 
+typedef int Index_t;
+
 struct Elem
 {
-    Elem_t elem; // char* data 
-    int    lenElem;  /// length
-    int    nElem;       ///////// nCopies     
+    Data_t data;    // char*
+    int    length;  
+    int    nCopies;       
                 
-    // static constexpr Elem_t DATA_POISON     = { 0, nullptr };
+    // static constexpr Data_t DATA_POISON     = { 0, nullptr };
     static const     int    LEN_ELEM_POISON = -1;
     static const     int    N_ELEM_POISON   = -1;      
 };
 
-typedef Elem List_t;
-
-typedef int Index_t;
+typedef Elem Elem_t;
 
 struct List
 {
-    List_t* data; // Elem_t
+    Elem_t* data;
 
     size_t capacity;
     size_t size;
 
+    static const size_t LIST_INITIAL_CAPACITY  = 4;
+    static const size_t LIST_INITIAL_SIZE      = 0;
+    static const size_t LIST_EXPAND_MULTIPLIER = 2;
     static const int    ELEM_NOT_FOUND         = -1;
-    static const size_t LIST_INITIAL_CAPACITY  = 4;
-    static const size_t LIST_INITIAL_SIZE      = 0;
-    static const size_t LIST_EXPAND_MULTIPLIER = 2;
 };
-
-    static const size_t LIST_INITIAL_CAPACITY  = 4;
-    static const size_t LIST_INITIAL_SIZE      = 0;
-    static const size_t LIST_EXPAND_MULTIPLIER = 2;
     
 List*
 ListStructCtor ();
 
-int //???
+void
 ListStructDtor (List* list);
 
-size_t // Index_t
+Index_t
 ListInsert (List* list,
-            List_t value); // Elem_t
+            Elem_t elem);
 
-int // Index_t
+Index_t
 ListFindElem (List* list,
-              Elem_t value,
-              int lenElem);
+              Elem_t elem);
 
-
-// find(list, elem)
-//
-
-int
-ListStructVerificator (List* list);
-
-int // void
+void
 ListStructDump (List* list);
-
-int
-ListStructRealloc (List *list);
 
 #endif /* STL_list_ */

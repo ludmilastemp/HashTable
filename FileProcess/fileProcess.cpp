@@ -50,7 +50,7 @@ FileProcess (const char* nameFile)
     char* ptr = file->buffer;
 
 #ifdef AVX
-    Elem_t* buffer = (Elem_t*) calloc (sizeBuffer, sizeof (Elem_t));
+    Data_t* buffer = (Data_t*) calloc (sizeBuffer, sizeof (Data_t));
 #else 
     char* buffer = (char*) calloc (sizeBuffer, sizeof (char));
 #endif
@@ -66,7 +66,7 @@ FileProcess (const char* nameFile)
         {
             sizeBuffer *= 2;
 #ifdef AVX
-            Elem_t* tmp = (Elem_t*) realloc (buffer, sizeBuffer * sizeof (Elem_t));
+            Data_t* tmp = (Data_t*) realloc (buffer, sizeBuffer * sizeof (Data_t));
 #else 
             char* tmp = (char*) realloc (buffer, sizeBuffer * sizeof (char));
 #endif                        

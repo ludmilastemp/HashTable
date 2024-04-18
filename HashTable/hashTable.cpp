@@ -8,7 +8,7 @@ HashTableCtor (size_t capacity, Hash_t (*HashFunc)(HashData_t data))
 
     hashTable->HashFunc    = HashFunc;
     hashTable->capacity    = capacity;
-    hashTable->nElem       = 0;
+    hashTable->nDuplicateElem       = 0;
     hashTable->nUniqueElem = 0;
 
     hashTable->list = (List**) calloc (capacity, sizeof (List*));
@@ -20,16 +20,24 @@ HashTableCtor (size_t capacity, Hash_t (*HashFunc)(HashData_t data))
     for (size_t i = 0; i < capacity; i++)
     {
         hashTable->list[i] = ListStructCtor ();
-        assert (hashTable->list[i]); // correct error handling free all calloc-ed
+        if (hashTable->list[i] == nullptr)
+        {
+            for (size_t j = 0; j < i; j++)
+            {
+                free (hashTable->list[j]);
+            }
+            free (hashTable);
+            return nullptr;
+        }
     }
 
     return hashTable;
 }
 
-int 
+void 
 HashTableDtor (HashTable* hashTable)
 {
-    if (hashTable == nullptr) return 0;
+    if (hashTable == nullptr) return;
 
     for (size_t i = 0; i < hashTable->capacity; i++)
     {
@@ -38,56 +46,54 @@ HashTableDtor (HashTable* hashTable)
 
     free (hashTable->list);
     
-    hashTable->list        = nullptr;
-    hashTable->HashFunc    = nullptr;
-    hashTable->capacity    = 0;
-    hashTable->nElem       = 0;
-    hashTable->nUniqueElem = 0;
+    hashTable->list           = nullptr;
+    hashTable->HashFunc       = nullptr;
+    hashTable->capacity       = 0;
+    hashTable->nDuplicateElem = 0;
+    hashTable->nUniqueElem    = 0;
 
     free (hashTable);
-
-    return 0;
 }
 
-size_t 
-HashTableInsert (HashTable* hashTable, Elem_t value, int lenElem)
+Index_t 
+HashTableInsert (HashTable* hashTable, 
+                 Elem_t elem)
 {
     assert (hashTable);
     
 #ifdef AVX
-    size_t indexList = hashTable->HashFunc (value.str) % hashTable->capacity; 
+    size_t indexList = hashTable->HashFunc (elem.data.str) % hashTable->capacity; 
 #else 
-    size_t indexList = hashTable->HashFunc (value) % hashTable->capacity; 
+    size_t indexList = hashTable->HashFunc (elem.data) % hashTable->capacity; 
 #endif
 
-    hashTable->nElem++;   
+    hashTable->nDuplicateElem++;   
 
     int indexElem = ListFindElem (hashTable->list[indexList],
-                                  value,
-                                  lenElem);
+                                  elem);
 
     if (indexElem != List::ELEM_NOT_FOUND)    
     {
-        (hashTable->list[indexList]->data[indexElem].nElem)++;
-        return indexList;
+        (hashTable->list[indexList]->data[indexElem].nCopies)++;
+        return (int)indexList;
     }
 
     hashTable->nUniqueElem++;
 
-    Elem elem = { .elem = value, .lenElem = lenElem, .nElem = 1 };
+    elem.nCopies = 1;
     ListInsert (hashTable->list[indexList], elem);
 
-    return indexList;
+    return (int)indexList;
 }
 
-int 
+void 
 HashTableDumpListsToFile (HashTable* hashTable, const char* nameFile)
 {
     assert (hashTable);
     assert (nameFile);
 
     FILE* fp = fopen (nameFile, "w");
-    if (fp == nullptr) return 0; 
+    if (fp == nullptr) return; 
 
     for (size_t i = 0; i < hashTable->capacity; i++)
     {
@@ -95,11 +101,9 @@ HashTableDumpListsToFile (HashTable* hashTable, const char* nameFile)
     }
 
     fclose (fp);
-
-    return 0;
 }
 
-int 
+void 
 HashTableDump (HashTable* hashTable)
 {
     assert (hashTable);
@@ -117,6 +121,4 @@ HashTableDump (HashTable* hashTable)
     }
 
     printf ("\n");
-
-    return 0;
 }

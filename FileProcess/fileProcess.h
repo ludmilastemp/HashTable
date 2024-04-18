@@ -14,7 +14,7 @@ struct File
     char*       buffer;
 
 #ifdef AVX
-    Elem_t*     words;
+    Data_t*     words;
 #endif
 
     size_t      size;

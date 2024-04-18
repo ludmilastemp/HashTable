@@ -13,12 +13,6 @@ avx:
 		HashTable/hashTable.cpp       	\
 		FileProcess/fileProcess.cpp   	\
 		-o avx.exe -O2 $(FLAGS_AVX) $(FLAGS) -DAVX
-# tests/testProcess.cpp			\
-# plot/buildPlot.cpp				\
-
-# sudo sysctl kernel.perf_event_paranoid=-1
-# $ perf record --call-graph=dwarf ./a.exe 4
-# $ perf report
 
 .PHONY: a.exe
 

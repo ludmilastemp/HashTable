@@ -16,15 +16,15 @@
 #endif
 
 #ifdef AVX
-typedef Word Elem_t;   
+typedef Word Data_t;   
 #else
-typedef char* Elem_t;
+typedef char* Data_t;
 #endif
 
 typedef unsigned long long Hash_t;
 typedef char* HashData_t;
 
-const size_t sizeHashTable = 401;//3
+const size_t sizeHashTable = 403;
 const int    sizeWord  = sizeof (__m128i);
 const int    nHashFunc = 6; // fe
 
