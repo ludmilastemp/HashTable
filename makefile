@@ -4,15 +4,33 @@ a.exe:
 		HashTable/hashs.cpp 	      	\
 		HashTable/hashTable.cpp       	\
 		FileProcess/fileProcess.cpp   	\
-		tests/testProcess.cpp			\
-		plot/buildPlot.cpp				\
-		-o a.exe -O2 $(FLAGS)
+		-o a.exe -O2 $(FLAGS_AVX) $(FLAGS)
+		
+avx:
+	g++ main.cpp					  	\
+		HashTable/list.cpp            	\
+		HashTable/hashs.cpp 	      	\
+		HashTable/hashTable.cpp       	\
+		FileProcess/fileProcess.cpp   	\
+		-o avx.exe -O2 $(FLAGS_AVX) $(FLAGS) -DAVX
+# tests/testProcess.cpp			\
+# plot/buildPlot.cpp				\
 
 # sudo sysctl kernel.perf_event_paranoid=-1
 # $ perf record --call-graph=dwarf ./a.exe 4
 # $ perf report
 
 .PHONY: a.exe
+
+ FLAGS_AVX = -mmmx						\
+ 		-msse 							\
+		-msse2 							\
+		-mssse3 						\
+		-msse4.1 						\
+		-msse4.2 						\
+		-mavx 							\
+		-mavx2 							
+ 
 
 FLAGS = -D											\
 		_DEBUG										\

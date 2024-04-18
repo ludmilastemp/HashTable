@@ -1,46 +1,46 @@
 #include "hashTable.h"
 
-// MM: int64_t hash_t
 HashTable*
-HashTableCtor (int /* M: size_t */ size, unsigned long long (*HashFunc)(ELEM_T data))
+HashTableCtor (size_t capacity, Hash_t (*HashFunc)(HashData_t data))
 {
-    // size == -1?
     HashTable* hashTable = (HashTable*) calloc (1, sizeof (HashTable));
-    assert (hashTable); // M: error?
+    if (hashTable == nullptr) return nullptr;
 
     hashTable->HashFunc    = HashFunc;
-    hashTable->size        = size;
+    hashTable->capacity    = capacity;
     hashTable->nElem       = 0;
     hashTable->nUniqueElem = 0;
 
-    hashTable->list = (List**) calloc ((size_t)size, sizeof (List*));
-    assert (hashTable->list); // M: error?
+    hashTable->list = (List**) calloc (capacity, sizeof (List*));
+    if (hashTable->list == nullptr) return nullptr;
 
     /**
      * Filling in the hash table header
      */
-    for (int i = 0; i < size; i++)
+    for (size_t i = 0; i < capacity; i++)
     {
         hashTable->list[i] = ListStructCtor ();
-        assert (hashTable->list[i]);
+        assert (hashTable->list[i]); // correct error handling free all calloc-ed
     }
 
     return hashTable;
 }
 
-int
+int 
 HashTableDtor (HashTable* hashTable)
 {
     if (hashTable == nullptr) return 0;
 
-    for (int i = 0; i < hashTable->size; i++)
+    for (size_t i = 0; i < hashTable->capacity; i++)
+    {
         ListStructDtor (hashTable->list[i]);
+    }
 
     free (hashTable->list);
     
     hashTable->list        = nullptr;
     hashTable->HashFunc    = nullptr;
-    hashTable->size        = 0;
+    hashTable->capacity    = 0;
     hashTable->nElem       = 0;
     hashTable->nUniqueElem = 0;
 
@@ -49,16 +49,17 @@ HashTableDtor (HashTable* hashTable)
     return 0;
 }
 
-int
-HashTableInsert (HashTable* hashTable, ELEM_T value, int lenElem)
+size_t 
+HashTableInsert (HashTable* hashTable, Elem_t value, int lenElem)
 {
     assert (hashTable);
+    
+#ifdef AVX
+    size_t indexList = hashTable->HashFunc (value.str) % hashTable->capacity; 
+#else 
+    size_t indexList = hashTable->HashFunc (value) % hashTable->capacity; 
+#endif
 
-    int indexList = abs(hashTable->HashFunc (value)) % hashTable->size; // M: size_t? capacity?
-    
-    assert (indexList >= 0);
-    assert (indexList < hashTable->size);
-    
     hashTable->nElem++;   
 
     int indexElem = ListFindElem (hashTable->list[indexList],
@@ -66,9 +67,6 @@ HashTableInsert (HashTable* hashTable, ELEM_T value, int lenElem)
                                   lenElem);
 
     if (indexElem != List::ELEM_NOT_FOUND)    
-                            /// const - fe
-                            /// enum  - fe (ListFindElemReturn - ?)
-                            /// const in struct
     {
         (hashTable->list[indexList]->data[indexElem].nElem)++;
         return indexList;
@@ -81,33 +79,36 @@ HashTableInsert (HashTable* hashTable, ELEM_T value, int lenElem)
 
     return indexList;
 }
-        /// rename - ?
-	// HashTableDumpListsToFile()
-int HashTablePrintSize (HashTable* hashTable, const char* nameFile)
+
+int 
+HashTableDumpListsToFile (HashTable* hashTable, const char* nameFile)
 {
     assert (hashTable);
     assert (nameFile);
 
     FILE* fp = fopen (nameFile, "w");
-    assert (fp); // M: error?
+    if (fp == nullptr) return 0; 
 
-    for (int i = 0; i < hashTable->size; i++)
-        fprintf (fp, "%d\n", hashTable->list[i]->size);
+    for (size_t i = 0; i < hashTable->capacity; i++)
+    {
+        fprintf (fp, "%lu\n", hashTable->list[i]->size);
+    }
 
     fclose (fp);
 
     return 0;
 }
 
-int HashTableDump (HashTable* hashTable)
+int 
+HashTableDump (HashTable* hashTable)
 {
     assert (hashTable);
     
     printf ("\n\n!!!       HashTableDump      !!!\n");
 
-    for (int i = 0; i < hashTable->size; i++)
+    for (size_t i = 0; i < hashTable->capacity; i++)
     {
-        printf ("list %d\n", i);
+        printf ("list %lu\n", i);                      
         if (hashTable->list[i]->size != 0)
         {
             ListStructDump (hashTable->list[i]);

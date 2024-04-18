@@ -2,76 +2,102 @@
 #include "FileProcess/fileProcess.h"
 #include "HashTable/hashTable.h"
 #include "HashTable/hashs.h"
-#include "tests/testProcess.h"
-#include "plot/buildPlot.h"
-#include <emmintrin.h>
+// #include "tests/testProcess.h"
+// #include "plot/buildPlot.h"
+#include <immintrin.h>
                                        
 int main (const int argc, const char** argv)
 {
     if (argc == 1) return 0;
 
+    size_t time1 = 0;
+    size_t time2 = 0;
+time1 = __rdtsc ();
+time2 = __rdtsc ();
+printf ("%lu\n", (time2 - time1));
+
     if (argv[1][0] == '0')
-    {                                         /// v< number of hash func
-        BuildPlotAllHashTable ("plot/plotAll.py", 6, sizeHashTable);
+    {                                         
+    //     BuildPlotAllHashTable ("plot/plotAll.py", nHashFunc);
         return 0;
     }
 
-    File* file = FileProcess ("test.txt");
+    File* file = FileProcess ("test_dbg.txt");
+    // File* file = FileProcess ("test.txt");
     assert (file);
 
-    printf ("nStrings = %d\n", file->nStrings);
+    printf ("nStrings = %lu\n", file->nStrings);
 
-    unsigned long long (*hashArray[7])(ELEM_T data) = 
+    Hash_t (*hashArray[nHashFunc])(HashData_t data) = 
     {
         &HashReturn0,
         &HashLetterASCII,
         &HashStrlen,
         &HashSumLetterASCII,
         &HashRor,
-        &HashRol,
-        &Hash7
+        &HashRol
     };
 
-    char nameFileWithResults[] = "tests/hash0.txt"; 
-    char nameFileWithPlot[]    = "plot/plot0.py";
+    size_t timeBegin = __rdtsc ();
+//     size_t time1 = 0;
+//     size_t time2 = 0;
+
+// time1 = __rdtsc ();
+// time2 = __rdtsc ();
+
+//     printf ("time = %lu\n", (time2 - time1) / 10000000);
 
     int iArgc = 2;
     while (iArgc <= argc)
     {
-        int nHashFunc = (argv[iArgc - 1][0] - '0');
-        if (nHashFunc < 0 || nHashFunc > 7) break;
+        int hashFunc = (argv[iArgc - 1][0] - '0');
+        if (hashFunc < 0 || hashFunc > nHashFunc) break;
         iArgc++;
 
-        printf ("\n\nnHashFunc = %d\n", nHashFunc);
+        printf ("\n\nnHashFunc = %d\n", hashFunc);
 
-        HashTable* hashTable = HashTableCtor (sizeHashTable, hashArray[nHashFunc - 1]);
+        HashTable* hashTable = HashTableCtor (sizeHashTable, hashArray[hashFunc - 1]);
         assert (hashTable);
 
         /**
          * Filling the hash table
          */
         int iBuf = 0;
-        for (int i = 0; i < file->nStrings; i++)
+        for (size_t i = 0; i < file->nStrings; i++)
         {
+#ifdef AVX
+            int len = 1;
+            if (file->words[iBuf].str[16 - 1] != 0) len++;
+
+            HashTableInsert (hashTable, file->words[iBuf], len * 16);
+            iBuf += len;
+#else 
             int len = 16;
             if (file->buffer[iBuf + 16 - 1] != 0) len += 16;
 
             HashTableInsert (hashTable, file->buffer + iBuf, len);
             iBuf += len;
+#endif
         }
 
-        printf ("\n\n%d\n\n", hashTable->nUniqueElem);
+        printf ("\n\n%lu\n\n", hashTable->nUniqueElem);
 
-        // HashTableDump (hashTable);
+        //  HashTableDump (hashTable);
 
-        sprintf (nameFileWithResults, "tests/hash%d.txt", nHashFunc);
-        HashTablePrintSize (hashTable, nameFileWithResults); 
+        // char nameFileWithResults[] = "tests/hash0.txt"; 
+        // sprintf (nameFileWithResults, "tests/hash%d.txt", hashFunc);
+        // HashTableDumpListsToFile (hashTable, nameFileWithResults); 
         
-        sprintf (nameFileWithPlot, "plot/plot%d.py", nHashFunc);
-        BuildPlotOneHashTable (nameFileWithPlot, hashTable);
+        // char nameFileWithPlot[]    = "plot/plot0.py";
+        // sprintf (nameFileWithPlot, "plot/plot%d.py", hashFunc);
+        // BuildPlotOneHashTable (nameFileWithPlot, hashTable);
 
         HashTableDtor (hashTable);
     }
+
+    size_t timeEnd = __rdtsc ();
+
+    printf ("\n\ntime = %lu\n\n", (timeEnd - timeBegin) / 10000000);
 
     STL_Fclose (file);
 

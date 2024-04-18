@@ -6,14 +6,19 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <sys/stat.h>
-#include "../HashTable/hashs.h"
+#include "../HashTable/config.h"
 
 struct File
 {
     const char* name;
     char*       buffer;
+
+#ifdef AVX
+    Elem_t*     words;
+#endif
+
     size_t      size;
-    int         nStrings;
+    size_t      nStrings;
 };
 
 File*

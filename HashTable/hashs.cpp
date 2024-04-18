@@ -1,95 +1,97 @@
 #include "hashs.h"
+                                
+static size_t 
+MyStrlen (HashData_t data);
 
-static unsigned long long HashRorRecursion (ELEM_T data, int len);
-static unsigned long long HashRolRecursion (ELEM_T data, int len);
-static int MyStrlen (ELEM_T data);
-
-unsigned long long HashReturn0 (ELEM_T data)
+Hash_t 
+HashReturn0 (HashData_t data)
 {
     assert (data);
+
     return 0;
 }
 
-unsigned long long HashLetterASCII (ELEM_T data)
+Hash_t 
+HashLetterASCII (HashData_t data)
 {
     assert (data);
 
-    return (unsigned long long)data[0];
+    return (Hash_t)data[0];
 }
 
-unsigned long long HashStrlen (ELEM_T data)
+Hash_t 
+HashStrlen (HashData_t data)
 {
     assert (data);
-    return (unsigned long long)MyStrlen (data);
+
+    return (Hash_t)MyStrlen (data);
 }
 
-unsigned long long HashSumLetterASCII (ELEM_T data)
+Hash_t 
+HashSumLetterASCII (HashData_t data)
 {
     assert (data);
 
-    int len = MyStrlen (data);
-    unsigned long long sum = 0;
+    size_t len = MyStrlen (data);
+    Hash_t sum = 0;
 
-    for (int i = 0; i < len; i++)
+    for (size_t i = 0; i < len; i++)
     {
-        sum += (unsigned long long)(data[i]);
+        sum += (Hash_t)(data[i]);
         if (sum >= sizeHashTable) sum %= sizeHashTable;
     }
 
     return sum;
 }
 
-unsigned long long HashRor (ELEM_T data)
+Hash_t 
+HashRor (HashData_t data)
 {
     assert (data);
 
-    int len = MyStrlen (data);
+    size_t len = MyStrlen (data);
+    Hash_t hash = (Hash_t)data[0];
+    
+    for (size_t i = 1; i < len; i++)
+    {
+        hash = ((hash >> 1) | (hash << CHAR_BIT * (sizeof(Hash_t) - 1))) 
+                ^ (Hash_t)(data[i]);
+    }
 
-    return HashRorRecursion (data, len);
+    return hash;
 }
 
-static unsigned long long HashRorRecursion (ELEM_T data, int len)
+Hash_t 
+HashRol (HashData_t data)
 {
     assert (data);
 
-    if (len == 1) return (unsigned long long)(data[0]);
+    size_t len = MyStrlen (data);
+    Hash_t hash = (Hash_t)data[0];
+    
+    for (size_t i = 1; i < len; i++)
+    {
+        hash = ((hash << 1) | (hash >> CHAR_BIT * (sizeof(Hash_t) - 1))) 
+                ^ (Hash_t)(data[i]);
+    }
 
-    unsigned long long hash = HashRorRecursion (data, len - 1);
-
-    return ((hash >> 1) | (hash << (sizeof(unsigned long long) - 1))) ^ (unsigned long long)(data[len - 1]);
+    return hash;
 }
 
-unsigned long long HashRol (ELEM_T data)
-{
-    assert (data);
-
-    int len = MyStrlen (data);
-
-    return HashRolRecursion (data, len) % sizeHashTable;
-}
-
-static unsigned long long HashRolRecursion (ELEM_T data, int len)
-{
-    assert (data);
-
-    if (len == 1) return (unsigned long long)(data[0]);
-
-    unsigned long long hash = HashRolRecursion (data, len - 1);
-
-    return ((hash << 1) | (hash >> (sizeof(unsigned long long) - 1))) ^ (unsigned long long)(data[len - 1]);
-}
-
-unsigned long long Hash7 (ELEM_T data)
+Hash_t 
+Hash7 (HashData_t data)
 {
     assert (data);
 
     return 0;
 }
 
-static int MyStrlen (ELEM_T data)
+static size_t 
+MyStrlen (HashData_t data)
 {
-    if (data == nullptr) return 0;
-    int i = 0;
+    assert (data);
+
+    size_t i = 0;
     while (data[i] != 0) i++;
 
     return i;

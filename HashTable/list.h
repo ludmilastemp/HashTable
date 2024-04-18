@@ -5,58 +5,63 @@
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
-
-#define TOSTR(x) #x
-#define LIST_DATA_PRINTF_SPECIFIER TOSTR(%c)
-
-typedef const char* ELEM_T;     /// ctrl+h - ?
+#include "config.h" 
 
 struct Elem
 {
-    ELEM_T elem;
-    int    lenElem;
-    int    nElem;       /// number of duplicate
-
-    static constexpr ELEM_T DATA_POISON     = nullptr;
+    Elem_t elem; // char* data 
+    int    lenElem;  /// length
+    int    nElem;       ///////// nCopies     
+                
+    // static constexpr Elem_t DATA_POISON     = { 0, nullptr };
     static const     int    LEN_ELEM_POISON = -1;
     static const     int    N_ELEM_POISON   = -1;      
 };
 
-typedef Elem LIST_T;
+typedef Elem List_t;
+
+typedef int Index_t;
 
 struct List
 {
-    LIST_T* data;
+    List_t* data; // Elem_t
 
-    int capacity;
-    int size;
+    size_t capacity;
+    size_t size;
 
-    static const int ELEM_NOT_FOUND = -1;
+    static const int    ELEM_NOT_FOUND         = -1;
+    static const size_t LIST_INITIAL_CAPACITY  = 4;
+    static const size_t LIST_INITIAL_SIZE      = 0;
+    static const size_t LIST_EXPAND_MULTIPLIER = 2;
 };
 
-static const int LIST_INITIAL_CAPACITY  = 4;
-static const int LIST_INITIAL_SIZE      = 0;
-static const int LIST_EXPAND_MULTIPLIER = 2;
-
+    static const size_t LIST_INITIAL_CAPACITY  = 4;
+    static const size_t LIST_INITIAL_SIZE      = 0;
+    static const size_t LIST_EXPAND_MULTIPLIER = 2;
+    
 List*
 ListStructCtor ();
 
-int
+int //???
 ListStructDtor (List* list);
 
-int
+size_t // Index_t
 ListInsert (List* list,
-            LIST_T value);
+            List_t value); // Elem_t
 
-int
+int // Index_t
 ListFindElem (List* list,
-              ELEM_T value,
+              Elem_t value,
               int lenElem);
+
+
+// find(list, elem)
+//
 
 int
 ListStructVerificator (List* list);
 
-int
+int // void
 ListStructDump (List* list);
 
 int

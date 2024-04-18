@@ -5,33 +5,39 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "list.h"
+#include "hashs.h"
+
+typedef Hash_t (*HashFunc_t)(HashData_t data); ///////////
 
 struct HashTable
 {
-    List** list;
-    unsigned long long (*HashFunc)(ELEM_T data);
-    int size;
-    int nElem;              // number of elem with duplicate
-    int nUniqueElem;
+    List** list; // !!!
+    
+    //Hash_t (*HashFunc)(HashData_t data);
+    HashFunc_t HashFunc;
+
+    size_t capacity;
+    size_t nElem;              // number of elem with duplicate
+    size_t nUniqueElem;
 };
 
 HashTable*
-HashTableCtor (int size,
-               unsigned long long (*HashFunc)(ELEM_T data));
+HashTableCtor (size_t capacity,
+               Hash_t (*HashFunc)(HashData_t data));
 
-int
+int //?
 HashTableDtor (HashTable* hashTable);
 
-int
+size_t //?
 HashTableInsert (HashTable* hashTable,
-                 ELEM_T value,
+                 Elem_t value,
                  int lenElem);
 
-int
-HashTablePrintSize (HashTable* hashTable,
-                    const char* nameFile);
+int //?
+HashTableDumpListsToFile (HashTable* hashTable,
+                          const char* nameFile);
 
-int
+int //?
 HashTableDump (HashTable* hashTable);
 
 #endif /* STL_hash_table_ */
