@@ -13,8 +13,8 @@ struct File
     const char* name;
     char*       buffer;
 
-#ifdef AVX
-    Elem_t*     words;
+#ifdef BufferAsUnion
+    Data_t*     words;
 #endif
 
     size_t      size;

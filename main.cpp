@@ -2,33 +2,24 @@
 #include "FileProcess/fileProcess.h"
 #include "HashTable/hashTable.h"
 #include "HashTable/hashs.h"
-// #include "tests/testProcess.h"
-// #include "plot/buildPlot.h"
 #include <immintrin.h>
                                        
 int main (const int argc, const char** argv)
 {
     if (argc == 1) return 0;
 
-    size_t time1 = 0;
-    size_t time2 = 0;
-time1 = __rdtsc ();
-time2 = __rdtsc ();
-printf ("%lu\n", (time2 - time1));
+//     size_t time1 = 0;
+//     size_t time2 = 0;
+// time1 = __rdtsc ();
+// time2 = __rdtsc ();
+// printf ("%lu\n", (time2 - time1));
 
-    if (argv[1][0] == '0')
-    {                                         
-    //     BuildPlotAllHashTable ("plot/plotAll.py", nHashFunc);
-        return 0;
-    }
-
-    File* file = FileProcess ("test_dbg.txt");
-    // File* file = FileProcess ("test.txt");
+    File* file = FileProcess ("test.txt");
     assert (file);
 
-    printf ("nStrings = %lu\n", file->nStrings);
+    // printf ("nStrings = %lu\n", file->nStrings);
 
-    Hash_t (*hashArray[nHashFunc])(HashData_t data) = 
+    HashFunc_t hashArray[nHashFunc] = 
     {
         &HashReturn0,
         &HashLetterASCII,
@@ -39,13 +30,6 @@ printf ("%lu\n", (time2 - time1));
     };
 
     size_t timeBegin = __rdtsc ();
-//     size_t time1 = 0;
-//     size_t time2 = 0;
-
-// time1 = __rdtsc ();
-// time2 = __rdtsc ();
-
-//     printf ("time = %lu\n", (time2 - time1) / 10000000);
 
     int iArgc = 2;
     while (iArgc <= argc)
@@ -54,7 +38,7 @@ printf ("%lu\n", (time2 - time1));
         if (hashFunc < 0 || hashFunc > nHashFunc) break;
         iArgc++;
 
-        printf ("\n\nnHashFunc = %d\n", hashFunc);
+        // printf ("\n\nnHashFunc = %d\n", hashFunc);
 
         HashTable* hashTable = HashTableCtor (sizeHashTable, hashArray[hashFunc - 1]);
         assert (hashTable);
@@ -65,32 +49,30 @@ printf ("%lu\n", (time2 - time1));
         int iBuf = 0;
         for (size_t i = 0; i < file->nStrings; i++)
         {
-#ifdef AVX
+            Elem_t elem = { 0 };
+#ifdef BufferAsUnion
             int len = 1;
             if (file->words[iBuf].str[16 - 1] != 0) len++;
-
-            HashTableInsert (hashTable, file->words[iBuf], len * 16);
             iBuf += len;
+
+            len *= 16;
+            elem.data = file->words[iBuf];
 #else 
             int len = 16;
             if (file->buffer[iBuf + 16 - 1] != 0) len += 16;
-
-            HashTableInsert (hashTable, file->buffer + iBuf, len);
             iBuf += len;
+
+            elem.data = file->buffer + iBuf;
 #endif
+            elem.length = len;
+
+            HashTableInsert (hashTable, elem);
         }
 
-        printf ("\n\n%lu\n\n", hashTable->nUniqueElem);
-
-        //  HashTableDump (hashTable);
-
-        // char nameFileWithResults[] = "tests/hash0.txt"; 
-        // sprintf (nameFileWithResults, "tests/hash%d.txt", hashFunc);
-        // HashTableDumpListsToFile (hashTable, nameFileWithResults); 
+        // printf ("\n\nnDuplicateElem = %lu\n\n", hashTable->nDuplicateElem);
+        // printf ("\n\nnUniqueElem    = %lu\n\n", hashTable->nUniqueElem);
         
-        // char nameFileWithPlot[]    = "plot/plot0.py";
-        // sprintf (nameFileWithPlot, "plot/plot%d.py", hashFunc);
-        // BuildPlotOneHashTable (nameFileWithPlot, hashTable);
+        //  HashTableDump (hashTable);
 
         HashTableDtor (hashTable);
     }

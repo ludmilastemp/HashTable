@@ -54,7 +54,7 @@ HashRor (HashData_t data)
     
     for (size_t i = 1; i < len; i++)
     {
-        hash = ((hash >> 1) | (hash << CHAR_BIT * (sizeof(Hash_t) - 1))) 
+        hash = ((hash >> 1) | (hash << (CHAR_BIT * sizeof(Hash_t) - 1))) 
                 ^ (Hash_t)(data[i]);
     }
 
@@ -71,7 +71,7 @@ HashRol (HashData_t data)
     
     for (size_t i = 1; i < len; i++)
     {
-        hash = ((hash << 1) | (hash >> CHAR_BIT * (sizeof(Hash_t) - 1))) 
+        hash = ((hash << 1) | (hash >> (CHAR_BIT * sizeof(Hash_t) - 1))) 
                 ^ (Hash_t)(data[i]);
     }
 

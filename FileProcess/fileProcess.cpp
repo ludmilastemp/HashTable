@@ -27,7 +27,7 @@ STL_Fread (const char* nameFile)
 
     file->size = fread (file->buffer, sizeof (char), file->size, fp);
 
-#ifdef AVX
+#ifdef BufferAsUnion
     file->words = nullptr;
 #endif
 
@@ -49,8 +49,8 @@ FileProcess (const char* nameFile)
     size_t sizeBuffer = file->size / 16;
     char* ptr = file->buffer;
 
-#ifdef AVX
-    Elem_t* buffer = (Elem_t*) calloc (sizeBuffer, sizeof (Elem_t));
+#ifdef BufferAsUnion
+    Data_t* buffer = (Data_t*) calloc (sizeBuffer, sizeof (Data_t));
 #else 
     char* buffer = (char*) calloc (sizeBuffer, sizeof (char));
 #endif
@@ -65,8 +65,8 @@ FileProcess (const char* nameFile)
         if ((size_t)iBuf * 16 >= sizeBuffer - sizeWord * 3)
         {
             sizeBuffer *= 2;
-#ifdef AVX
-            Elem_t* tmp = (Elem_t*) realloc (buffer, sizeBuffer * sizeof (Elem_t));
+#ifdef BufferAsUnion
+            Data_t* tmp = (Data_t*) realloc (buffer, sizeBuffer * sizeof (Data_t));
 #else 
             char* tmp = (char*) realloc (buffer, sizeBuffer * sizeof (char));
 #endif                        
@@ -92,7 +92,7 @@ FileProcess (const char* nameFile)
         while (ptr != file->buffer + file->size - 1 
                && isalpha (*ptr))
         {
-#ifdef AVX
+#ifdef BufferAsUnion
             buffer[iBuf + len / 16].str[len % 16] = *ptr;
 #else 
             buffer[iBuf + len] = *ptr;
@@ -106,7 +106,7 @@ FileProcess (const char* nameFile)
          */
         if (len > sizeWord - 1)
         {   
-#ifdef AVX 
+#ifdef BufferAsUnion 
             iBuf++;
 #else 
             iBuf += sizeWord;
@@ -114,7 +114,7 @@ FileProcess (const char* nameFile)
 
             for (; len < sizeWord * 2; len++)
             {
-#ifdef AVX
+#ifdef BufferAsUnion
                 buffer[iBuf].str[len - sizeWord] = 0;
 #else
                 buffer[iBuf + len - sizeWord] = 0;
@@ -124,21 +124,21 @@ FileProcess (const char* nameFile)
 
         for (; len < sizeWord; len++)
         {
-#ifdef AVX
+#ifdef BufferAsUnion
             buffer[iBuf].str[len] = 0;
 #else
             buffer[iBuf + len] = 0;
 #endif
         }
 
-#ifdef AVX
+#ifdef BufferAsUnion
         iBuf++;
 #else
         iBuf += sizeWord;
 #endif
     }
 
-#ifdef AVX
+#ifdef BufferAsUnion
     file->words  = buffer;
 #else
     free (file->buffer);
@@ -159,7 +159,7 @@ STL_Fclose (struct File* file)
     free (file->buffer);
     file->buffer   = nullptr;
 
-#ifdef AVX
+#ifdef BufferAsUnion
     free (file->words);
     file->words    = nullptr;
 #endif

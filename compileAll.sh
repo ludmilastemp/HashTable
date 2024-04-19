@@ -1,0 +1,5 @@
+make simple
+make loadInUnion_m128
+make loadInUnionStrWithoutAlignment
+make loadInUnionStr
+make loadInStr

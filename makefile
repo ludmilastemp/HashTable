@@ -1,20 +1,45 @@
-a.exe:
+simple:
 	g++ main.cpp					  	\
 		HashTable/list.cpp            	\
 		HashTable/hashs.cpp 	      	\
 		HashTable/hashTable.cpp       	\
 		FileProcess/fileProcess.cpp   	\
-		-o a.exe -O2 $(FLAGS_AVX) $(FLAGS)
-		
-avx:
+		-o simple.exe -O2 $(FLAGS_AVX) $(FLAGS) -DsimpleVersion 
+
+loadInStr:
 	g++ main.cpp					  	\
 		HashTable/list.cpp            	\
 		HashTable/hashs.cpp 	      	\
 		HashTable/hashTable.cpp       	\
 		FileProcess/fileProcess.cpp   	\
-		-o avx.exe -O2 $(FLAGS_AVX) $(FLAGS) -DAVX
-# tests/testProcess.cpp			\
-# plot/buildPlot.cpp				\
+		-o loadInStr.exe -O2 $(FLAGS_AVX) $(FLAGS) 
+
+loadInUnionStr:
+	g++ main.cpp					  	\
+		HashTable/list.cpp            	\
+		HashTable/hashs.cpp 	      	\
+		HashTable/hashTable.cpp       	\
+		FileProcess/fileProcess.cpp   	\
+		-o loadInUnionStr.exe -O2 $(FLAGS_AVX) $(FLAGS) \
+		-DBufferAsUnion -DloadInUnionStr
+
+loadInUnionStrWithoutAlignment:
+	g++ main.cpp					  	\
+		HashTable/list.cpp            	\
+		HashTable/hashs.cpp 	      	\
+		HashTable/hashTable.cpp       	\
+		FileProcess/fileProcess.cpp   	\
+		-o loadInUnionStrWithoutAlignment.exe -O2 $(FLAGS_AVX) $(FLAGS) \
+		-DBufferAsUnion -DloadInUnionStr -DloadInUnionStrWithoutAlignment
+
+loadInUnion_m128:
+	g++ main.cpp					  	\
+		HashTable/list.cpp            	\
+		HashTable/hashs.cpp 	      	\
+		HashTable/hashTable.cpp       	\
+		FileProcess/fileProcess.cpp   	\
+		-o loadInUnion_m128.exe -O2 $(FLAGS_AVX) $(FLAGS) \
+		-DBufferAsUnion -DloadInUnionStr -DloadInUnion_m128
 
 # sudo sysctl kernel.perf_event_paranoid=-1
 # $ perf record --call-graph=dwarf ./a.exe 4

@@ -1,60 +1,10 @@
 #include "list.h"
 
-#ifdef AVX // sse sse2 ssse3 mmx simd loadu 
-static int
-ListFindElem_avx (List* list,
-                  avx_t value);
-#endif
-
-List*
-ListStructCtor ()
+enum StatusCalloc
 {
-    List* list = (List*) calloc (1, sizeof (List));
-    if (list == nullptr) return nullptr;
-
-    list->capacity = LIST_INITIAL_CAPACITY;
-
-    ListStructRealloc (list); // error
-
-    list->size = LIST_INITIAL_SIZE;
-
-    for (size_t i = 0; i < LIST_INITIAL_CAPACITY; ++i)
-    {
-        // list->data[i].elem    = Elem::DATA_POISON;
-        list->data[i].lenElem = Elem::LEN_ELEM_POISON;
-        list->data[i].nElem   = Elem::N_ELEM_POISON;
-    }
-
-    return list;
-}
-
-int 
-ListStructDtor (List* list)
-{
-    if (list == nullptr) return 0;
-
-    free (list->data);
-    list->data     = nullptr;
-    list->capacity = 0;
-    list->size     = 0;
-
-    free (list);
-
-    return 0;
-}
-
-size_t
-ListInsert (List* list, List_t value)
-{
-    assert (list);
-
-    if (list->size >= list->capacity - 1) ListStructRealloc (list); // error
-
-    list->data[list->size] = value;
-    list->size++;
-
-    return list->size - 1;
-}
+    OK_CALLOC    = 0,
+    ERROR_CALLOC = 1,
+};
 
 //ListFindElemSSE3
 //ListFindElemAVX
@@ -68,29 +18,110 @@ ListInsert (List* list, List_t value)
 // int ListFindElem() { return ListFindElemSingle(...); }
 
 
-int
-ListFindElem (List* list, Elem_t value, int lenElem)
+// #ifdef AVX // sse sse2 ssse3 mmx simd loadu 
+static int
+ListFindElem_avx (List* list,
+                  avx_t value);
+// #endif
+
+static StatusCalloc
+ListStructRealloc (List *list);
+
+List*
+ListStructCtor ()
+{
+    List* list = (List*) calloc (1, sizeof (List));
+    if (list == nullptr) return nullptr;
+
+    list->capacity = List::LIST_INITIAL_CAPACITY;
+
+    if (ListStructRealloc (list) == ERROR_CALLOC) 
+    {
+        free (list);
+        return nullptr;
+    }
+
+    list->size = List::LIST_INITIAL_SIZE;
+
+    for (size_t i = 0; i < List::LIST_INITIAL_CAPACITY; ++i)
+    {
+        // list->data[i].elem    = Elem::DATA_POISON;
+        list->data[i].length  = Elem::LEN_ELEM_POISON;
+        list->data[i].nCopies = Elem::N_ELEM_POISON;
+    }
+
+    return list;
+}
+
+void 
+ListStructDtor (List* list)
+{
+    if (list == nullptr) return;
+
+    free (list->data);
+    list->data     = nullptr;
+    list->capacity = 0;
+    list->size     = 0;
+
+    free (list);
+}
+
+Index_t
+ListInsert (List* list, Elem_t elem)
 {
     assert (list);
 
-#ifdef AVX
-    // if (lenElem == 16) return ListFindElem_avx (list, value.m128i);
+    if (list->size >= list->capacity - 1) 
+    {
+        if (ListStructRealloc (list) == ERROR_CALLOC)
+            return 0;
+    } 
 
-    // lenElem == 32
-    // -> в отдельную функцию полностью под ifdef обе функции и одинаковые названияя
+    list->data[list->size] = elem;
+    list->size++;
+
+    return (int)list->size - 1;
+}
+
+Index_t
+ListFindElem (List* list, 
+              Elem_t elem)
+{
+    assert (list);
+
+// _mm_loadu_si128 (потом без u (да да, ищи выравнивание))
+
+#ifndef simpleVersion
+
+    if (elem.length == 16)
+    {
+    #ifdef loadInUnion_m128
+        return ListFindElem_avx (list, elem.data.m128i);
+    #endif
+
+    #ifdef loadInUnionStr
+        char* str = elem.data.str;
+        #ifdef loadInUnionStrWithoutAlignment
+            avx_t avx = _mm_load_si128 ((__m128i*)str);
+        #else
+            avx_t avx = _mm_loadu_si128 ((__m128i*)str);
+        #endif
+    #else /* loadInStr */
+            avx_t avx = _mm_loadu_si128 ((__m128i*)elem.data);
+    #endif
+        return ListFindElem_avx (list, avx);
+    }
+
 #endif
-/// функция compare и ее под ifdef (на крайняк копипаста цикла не так плохо)
 
     for (size_t i = 0; i < list->size; i++)
     {
-        if (list->data[i].lenElem == lenElem && 
-            //Compare()
-#ifdef AVX
-            strncmp (value.str, list->data[i].elem.str, (size_t)lenElem) == 0)
+        if (list->data[i].length == elem.length && 
+
+#ifdef BufferAsUnion
+            strncmp (elem.data.str, list->data[i].data.str, (size_t)elem.length) == 0)
 #else 
-// load
-// _mm_loadu_si128 (потом без u (да да, ищи выравнивание))
-	        strncmp (value, list->data[i].elem, (size_t)lenElem) == 0)
+	        strncmp (elem.data,     list->data[i].data,     (size_t)elem.length) == 0)
 #endif
 	    {
 
@@ -101,10 +132,7 @@ ListFindElem (List* list, Elem_t value, int lenElem)
     return List::ELEM_NOT_FOUND;
 }
 
-
-#ifdef AVX
-static int
-// ListFindElem (List* list, avx_t value)
+static Index_t
 ListFindElem_avx (List* list, avx_t value)
 {
     assert (list);
@@ -114,22 +142,51 @@ ListFindElem_avx (List* list, avx_t value)
         __m128i m128i;
         size_t arr[2];
     } cmp;
+    
+    __m128i mAll1 = _mm_set1_epi8 ((char)0xff);
 
     for (size_t i = 0; i < list->size; i++)
     {
-        cmp.m128i = value - list->data[i].elem.m128i; 
-///_mm_testz_si128
-// == 0 && == 0
-        if (cmp.arr[0] + cmp.arr[1] == 0)
+
+    #ifdef loadInUnion_m128
+        avx_t elem = list->data[i].data.m128i;
+
+        cmp.m128i = value - elem;
+        if (cmp.arr[0] == 0 && cmp.arr[1] == 0)
 	    {
             return (int)i;
 	    }
+
+    #else
+
+        #ifdef loadInUnionStr
+            char* str = list->data[i].data.str;
+            #ifdef loadInUnionStrWithoutAlignment
+                avx_t elem = _mm_load_si128 ((__m128i*)str);
+            #else
+                avx_t elem = _mm_loadu_si128 ((__m128i*)str);
+            #endif
+        #else /* loadInStr */
+            avx_t elem = _mm_loadu_si128 ((__m128i*)list->data[i].data);
+        #endif
+        
+        cmp.m128i = value - elem;
+        if (cmp.arr[0] == 0 && cmp.arr[1] == 0)
+	    {
+            return (int)i;
+	    }
+        // if (_mm_testz_si128 (value - elem, mAll1) == 1)
+	    // {
+        //     return (int)i;
+	    // }
+
+    #endif
     }
+
     return List::ELEM_NOT_FOUND;
 }
-#endif
 
-int 
+void 
 ListStructDump (List* list)
 {
     assert (list);
@@ -143,17 +200,17 @@ ListStructDump (List* list)
     {
         printf ("%-3lu ", i);
 
-        if (list->data[i].lenElem != Elem::LEN_ELEM_POISON)
+        if (list->data[i].length != Elem::LEN_ELEM_POISON)
         {
-            printf ("len = %-2d   ", list->data[i].lenElem);
-            printf ("nElem = %-5d ", list->data[i].nElem);
+            printf ("len = %-2d   ", list->data[i].length);
+            printf ("nCopies = %-5d ", list->data[i].nCopies);
 
-            for (int j = 0; j < list->data[i].lenElem; j++)
+            for (int j = 0; j < list->data[i].length; j++)
             {
-#ifdef AVX
-                printf ("%c", (list->data[i].elem.str[j]));
+#ifdef BufferAsUnion
+                printf ("%c", (list->data[i].data.str[j]));
 #else 
-                printf ("%c", (list->data[i].elem[j]));
+                printf ("%c", (list->data[i].data[j]));
 #endif
             }
         }
@@ -163,26 +220,25 @@ ListStructDump (List* list)
     }
 
     printf ("\n");
-
-    return 0;
 }
 
-int 
+static StatusCalloc 
 ListStructRealloc (List *list)
 {
     assert (list);
 
-    list->capacity *= LIST_EXPAND_MULTIPLIER;
+    list->capacity *= List::LIST_EXPAND_MULTIPLIER;
 
-    list->data = (List_t*) realloc (list->data/* another ptr  sleva*/, list->capacity * sizeof (List_t));
-    if (list->data == nullptr) return 0;
+    Elem_t* tmp = (Elem_t*) realloc (list->data, list->capacity * sizeof (Elem_t));
+    if (tmp == nullptr) return ERROR_CALLOC;
+    list->data = tmp;
 
-    for (size_t i = list->capacity / LIST_EXPAND_MULTIPLIER; i < list->capacity; ++i)
+    for (size_t i = list->capacity / List::LIST_EXPAND_MULTIPLIER; i < list->capacity; ++i)
     {
         // list->data[i].elem    = Elem::DATA_POISON;
-        list->data[i].lenElem = Elem::LEN_ELEM_POISON;
-        list->data[i].nElem   = Elem::N_ELEM_POISON;
+        list->data[i].length  = Elem::LEN_ELEM_POISON;
+        list->data[i].nCopies = Elem::N_ELEM_POISON;
     }
 
-    return 0;
+    return OK_CALLOC;
 }

@@ -5,8 +5,8 @@
 #include <emmintrin.h>
 #include <nmmintrin.h>
 
-#ifdef AVX
     typedef __m128i avx_t; 
+#ifdef BufferAsUnion
 
     union Word
     {
@@ -15,10 +15,10 @@
     };
 #endif
 
-#ifdef AVX
-typedef Word Elem_t;   
+#ifdef BufferAsUnion
+typedef Word Data_t;   
 #else
-typedef char* Elem_t;
+typedef char* Data_t;
 #endif
 
 typedef unsigned long long Hash_t;

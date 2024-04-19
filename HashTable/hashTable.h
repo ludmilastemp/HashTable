@@ -7,37 +7,35 @@
 #include "list.h"
 #include "hashs.h"
 
-typedef Hash_t (*HashFunc_t)(HashData_t data); ///////////
+typedef Hash_t (*HashFunc_t)(HashData_t data);
 
 struct HashTable
 {
     List** list; // !!!
     
-    //Hash_t (*HashFunc)(HashData_t data);
     HashFunc_t HashFunc;
 
     size_t capacity;
-    size_t nElem;              // number of elem with duplicate
+    size_t nDuplicateElem;  
     size_t nUniqueElem;
 };
 
 HashTable*
 HashTableCtor (size_t capacity,
-               Hash_t (*HashFunc)(HashData_t data));
+               HashFunc_t HashFunc);
 
-int //?
+void
 HashTableDtor (HashTable* hashTable);
 
-size_t //?
+Index_t
 HashTableInsert (HashTable* hashTable,
-                 Elem_t value,
-                 int lenElem);
+                 Elem_t elem);
 
-int //?
+void
 HashTableDumpListsToFile (HashTable* hashTable,
                           const char* nameFile);
 
-int //?
+void
 HashTableDump (HashTable* hashTable);
 
 #endif /* STL_hash_table_ */
