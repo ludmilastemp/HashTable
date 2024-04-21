@@ -7,22 +7,13 @@
 #include <assert.h>
 #include <sys/stat.h>
 #include "../HashTable/config.h"
-
-#ifdef UNION
-    typedef Word Data_t;   
-#else
-    typedef char* Data_t;
-#endif
+#include "../HashTable/realize.h"
 
 struct File
 {
     const char* name;
     char*       buffer;
-
-#ifdef UNION
     Data_t*     words;
-#endif
-
     size_t      size;
     size_t      nStrings;
 };

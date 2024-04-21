@@ -1,18 +1,5 @@
 #include "fileProcess.h"
 
-static char*
-GetElemPtr (void* buffer, int nElem, int len);
-
-static char*
-GetElemPtr (void* buffer, int nElem, int len)
-{
-    #ifdef UNION
-        return &((Data_t*)buffer)[nElem + len / 16].str[len % 16];
-    #else 
-        return &((char*)buffer)[nElem * 16 + len];
-    #endif
-}
-
 File* 
 STL_Fread (const char* nameFile)
 {
@@ -31,7 +18,7 @@ STL_Fread (const char* nameFile)
 
     file->size = (size_t)buff.st_size;
 
-    file->buffer = (char*) calloc (file->size, sizeof (char));
+    file->buffer = (char*) calloc (file->size + 1, sizeof (char));
     if (file->buffer == nullptr) 
     {
         free (file);
@@ -39,10 +26,8 @@ STL_Fread (const char* nameFile)
     }
 
     file->size = fread (file->buffer, sizeof (char), file->size, fp);
-
-#ifdef UNION
+    file->buffer[file->size] = 0; 
     file->words = nullptr;
-#endif
 
     fclose (fp);
 
@@ -59,15 +44,10 @@ FileProcess (const char* nameFile)
 
     file->nStrings = 0;
     
-    size_t sizeBuffer = file->size / 16;
+    size_t sizeBuffer = file->size / sizeWord + 1;
     char* ptr = file->buffer;
 
-#ifdef UNION
     Data_t* buffer = (Data_t*) calloc (sizeBuffer, sizeof (Data_t));
-#else 
-    char* buffer = (char*) calloc (sizeBuffer, sizeof (char));
-#endif
-
     if (buffer == nullptr) return nullptr;
     
     for (int iBuf = 0; ptr != file->buffer + file->size - 1; 
@@ -76,15 +56,11 @@ FileProcess (const char* nameFile)
         /**
          * Check realloc
          */
-        if ((size_t)iBuf * 16 >= sizeBuffer - sizeWord * 3)
+        if (iBuf * sizeWord >= (int)sizeBuffer - sizeWord * 3)
         {
             sizeBuffer *= 2;
             
-#ifdef UNION
-            Data_t* tmp = (Data_t*) realloc (buffer, sizeBuffer * sizeof (Data_t));
-#else 
-            char* tmp = (char*) realloc (buffer, sizeBuffer * sizeof (char));
-#endif           
+            Data_t* tmp = (Data_t*) realloc (buffer, sizeBuffer * sizeof (Data_t)); 
 
             if (tmp == nullptr) 
             {
@@ -134,14 +110,7 @@ FileProcess (const char* nameFile)
         iBuf++;
     }
 
-#ifdef UNION
-    file->words  = buffer;
-#else
-    free (file->buffer);
-    file->buffer = buffer;
-    file->size   = sizeBuffer;
-#endif
-
+    file->words = buffer;
     file->nStrings--;
 
     return file;
@@ -155,10 +124,8 @@ STL_Fclose (struct File* file)
     free (file->buffer);
     file->buffer   = nullptr;
 
-#ifdef UNION
     free (file->words);
     file->words    = nullptr;
-#endif
 
     file->name     = nullptr;
     file->size     = 0;

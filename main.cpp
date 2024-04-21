@@ -3,15 +3,13 @@
 #include "HashTable/hashTable.h"
 #include "HashTable/hashs.h"
 #include <immintrin.h>
-                       
+                
 int main (const int argc, const char** argv)
 {
     if (argc == 1) return 0;
 
     File* file = FileProcess ("test2.txt");
     assert (file);
-
-    // printf ("nStrings = %lu\n", file->nStrings);
 
     HashFunc_t hashArray[nHashFunc] = 
     {
@@ -40,27 +38,10 @@ int main (const int argc, const char** argv)
         /**
          * Filling the hash table
          */
-        int iBuf = 0;
+        // int i = 0;
         for (size_t i = 0; i < file->nStrings; i++)
         {
-            Elem_t elem = { 0 };
-#ifdef UNION
-            int len = 1;
-            if (file->words[iBuf].str[16 - 1] != 0) len++;
-            iBuf += len;
-
-            len *= 16;
-            elem.data = file->words[iBuf];
-#else 
-            int len = 16;
-            if (file->buffer[iBuf + 16 - 1] != 0) len += 16;
-            iBuf += len;
-
-            elem.data = file->buffer + iBuf;
-#endif
-            elem.length = len;
-
-            HashTableInsert (hashTable, elem);
+            HashTableInsert (hashTable, &file->words[i]);
         }
 
         //  HashTableDump (hashTable);

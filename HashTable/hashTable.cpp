@@ -1,15 +1,15 @@
 #include "hashTable.h"
 
 HashTable*
-HashTableCtor (size_t capacity, Hash_t (*HashFunc)(HashData_t data))
+HashTableCtor (size_t capacity, HashFunc_t HashFunc)
 {
     HashTable* hashTable = (HashTable*) calloc (1, sizeof (HashTable));
-    if (hashTable == nullptr) return nullptr;
+    if (hashTable == nullptr) return nullptr; 
 
-    hashTable->HashFunc    = HashFunc;
-    hashTable->capacity    = capacity;
-    hashTable->nDuplicateElem       = 0;
-    hashTable->nUniqueElem = 0;
+    hashTable->HashFunc       = HashFunc;
+    hashTable->capacity       = capacity;
+    hashTable->nDuplicateElem = 0;
+    hashTable->nUniqueElem    = 0;
 
     hashTable->list = (List**) calloc (capacity, sizeof (List*));
     if (hashTable->list == nullptr) return nullptr;
@@ -57,26 +57,22 @@ HashTableDtor (HashTable* hashTable)
 
 Index_t 
 HashTableInsert (HashTable* hashTable, 
-                 Elem_t elem)
+                 Data_t* data)
 {
     assert (hashTable);
     
-    size_t indexList = hashTable->HashFunc (elem.data) % hashTable->capacity; 
+    size_t indexList = hashTable->HashFunc (data) % hashTable->capacity; 
     hashTable->nDuplicateElem++;   
 
-    int indexElem = ListFindElem (hashTable->list[indexList],
-                                  elem);
+    int indexElem = ListFindElem (hashTable->list[indexList], data);
 
     if (indexElem != List::ELEM_NOT_FOUND)    
     {
-        (hashTable->list[indexList]->data[indexElem].nCopies)++;
         return (int)indexList;
     }
 
     hashTable->nUniqueElem++;
-
-    elem.nCopies = 1;
-    ListInsert (hashTable->list[indexList], elem);
+    ListInsert (hashTable->list[indexList], data);
 
     return (int)indexList;
 }

@@ -6,13 +6,13 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "config.h" 
+#include "realize.h" 
 
 typedef int Index_t;
 
 struct Elem
 {
     Data_t data;    // char* // Word
-    int    length;  
     int    nCopies;       
                 
     // static constexpr Data_t DATA_POISON     = { 0, nullptr };
@@ -20,11 +20,12 @@ struct Elem
     static const     int    N_ELEM_POISON   = -1;      
 };
 
-typedef Elem Elem_t;
+typedef Data_t Elem_t;
+// typedef Elem Elem_t;
 
 struct List
 {
-    Elem_t* data;
+    Elem_t** data;
 
     size_t capacity;
     size_t size;
@@ -43,11 +44,11 @@ ListStructDtor (List* list);
 
 Index_t
 ListInsert (List* list,
-            Elem_t elem);
+            Data_t* data);
 
 Index_t 
 ListFindElem (List* list, 
-              Elem_t elem);
+              Data_t* data);
 
 void
 ListStructDump (List* list);

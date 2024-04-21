@@ -1,13 +1,11 @@
 #ifndef STL_hash_table_
 #define STL_hash_table_
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
 #include "list.h"
-#include "hashs.h"
 
-typedef Hash_t (*HashFunc_t)(HashData_t data);
+typedef unsigned long long Hash_t;
+typedef Data_t HashData_t;
+typedef Hash_t (*HashFunc_t)(HashData_t* data);
 
 struct HashTable
 {
@@ -29,7 +27,7 @@ HashTableDtor (HashTable* hashTable);
 
 Index_t
 HashTableInsert (HashTable* hashTable,
-                 Elem_t elem);
+                 Data_t* data);
 
 void
 HashTableDumpListsToFile (HashTable* hashTable,

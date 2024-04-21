@@ -6,32 +6,6 @@ enum StatusCalloc
     ERROR_CALLOC = 1,
 };
 
-static char*
-GetElemCharPtr (Elem_t* elem);
-
-static __m128i
-GetElemM128i (Elem_t* elem);
-
-static char*
-GetElemCharPtr (Elem_t* elem)
-{
-    #ifdef UNION
-        return elem->data.str;
-    #else 
-        return elem->data;
-    #endif
-}
-
-static __m128i
-GetElemM128i (Elem_t* elem)
-{
-    #ifdef UNION
-        return elem->data.m128i;
-    #else 
-        return _mm_load_si128 ((__m128i*)elem->data);
-    #endif
-}
-
 static StatusCalloc
 ListStructRealloc (List *list);
 
@@ -39,21 +13,21 @@ ListStructRealloc (List *list);
 
 // Index_t
 // ListFindElemString (List* list, 
-//                     Elem_t elem);
+//                     Data_t data);
 // Index_t
 // ListFindElemUnion  (List* list, 
-//                     Elem_t elem);
+//                     Data_t data);
 
 
 // #ifdef UNION
-//     Index_t ListFindElem (List* list, Elem_t elem) { return ListFindElemUnion (list, elem); }
+//     Index_t ListFindElem (List* list, Data_t data) { return ListFindElemUnion (list, elem); }
 // #else 
 // /**
 //  * string
 //  * simple
 //  * single
 //  */
-//     Index_t ListFindElem (List* list, Elem_t elem) { return ListFindElemString (list, elem); }
+//     Index_t ListFindElem (List* list, Data_t data) { return ListFindElemString (list, elem); }
 // #endif
 
 ////-------------------------------------///
@@ -78,8 +52,7 @@ ListStructCtor ()
     for (size_t i = 0; i < List::LIST_INITIAL_CAPACITY; ++i)
     {
         // list->data[i].elem    = Elem::DATA_POISON;
-        list->data[i].length  = Elem::LEN_ELEM_POISON;
-        list->data[i].nCopies = Elem::N_ELEM_POISON;
+        // list->data[i].nCopies = Elem::N_ELEM_POISON;
     }
 
     return list;
@@ -99,7 +72,7 @@ ListStructDtor (List* list)
 }
 
 Index_t
-ListInsert (List* list, Elem_t elem)
+ListInsert (List* list, Data_t* data)
 {
     assert (list);
 
@@ -109,7 +82,7 @@ ListInsert (List* list, Elem_t elem)
             return 0;
     } 
 
-    list->data[list->size] = elem;
+    list->data[list->size] = data;
     list->size++;
 
     return (int)list->size - 1;
@@ -117,24 +90,25 @@ ListInsert (List* list, Elem_t elem)
 
 Index_t
 ListFindElem (List* list, 
-              Elem_t elem)
+              Data_t* data)
 {
     assert (list);
 
-    if (elem.length == 16) 
+    if (1) 
     {
-        avx_t value = GetElemM128i (&elem);
+        avx_t value = GetElemAvx (data);
 
         union 
         {
-            __m128i m128i;
-            size_t arr[2];
+            avx_t avx;
+            size_t arr[sizeWord / sizeof (size_t)];
         } cmp;
 
         for (size_t i = 0; i < list->size; i++)
         { 
-            cmp.m128i = value - GetElemM128i (&list->data[i]);
-            if (cmp.arr[0] == 0 && cmp.arr[1] == 0)
+            cmp.avx = value - GetElemAvx (list->data[i]);
+            if (cmp.arr[0] == 0 && cmp.arr[1] == 0 && ////////
+                cmp.arr[2] == 0 && cmp.arr[3] == 0)
             {
                 return (int)i;
             }
@@ -145,8 +119,7 @@ ListFindElem (List* list,
 
     for (size_t i = 0; i < list->size; i++)
     {
-        if (list->data[i].length == elem.length && 
-	        strncmp (GetElemCharPtr (&elem), GetElemCharPtr(&list->data[i]), (size_t)elem.length) == 0)
+        if (strncmp (GetElemCharPtr (data), GetElemCharPtr(list->data[i]), sizeWord) == 0)
 	    {
             return (int)i;
 	    }
@@ -169,13 +142,11 @@ ListStructDump (List* list)
     {
         printf ("%-3lu ", i);
 
-        if (list->data[i].length != Elem::LEN_ELEM_POISON)
+        // if (list->data[i].nCopies != Elem::N_ELEM_POISON)
         {
-            printf ("len = %-2d   ", list->data[i].length);
-            printf ("nCopies = %-5d ", list->data[i].nCopies);
-            printf ("%s", GetElemCharPtr (&list->data[i]));
+            printf ("%s", GetElemCharPtr (list->data[i]));
         }
-        else printf ("pn ");
+        // else printf ("pn ");
 
         printf ("\n");
     }
@@ -190,15 +161,14 @@ ListStructRealloc (List *list)
 
     list->capacity *= List::LIST_EXPAND_MULTIPLIER;
 
-    Elem_t* tmp = (Elem_t*) realloc (list->data, list->capacity * sizeof (Elem_t));
+    Elem_t** tmp = (Elem_t**) realloc (list->data, list->capacity * sizeof (Elem_t*));
     if (tmp == nullptr) return ERROR_CALLOC;
     list->data = tmp;
 
     for (size_t i = list->capacity / List::LIST_EXPAND_MULTIPLIER; i < list->capacity; ++i)
     {
         // list->data[i].elem    = Elem::DATA_POISON;
-        list->data[i].length  = Elem::LEN_ELEM_POISON;
-        list->data[i].nCopies = Elem::N_ELEM_POISON;
+        // list->data[i].nCopies = Elem::N_ELEM_POISON;
     }
 
     return OK_CALLOC;
