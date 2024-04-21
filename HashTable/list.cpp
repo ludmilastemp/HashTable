@@ -6,26 +6,58 @@ enum StatusCalloc
     ERROR_CALLOC = 1,
 };
 
-//ListFindElemSSE3
-//ListFindElemAVX
-//ListFindElemSingle
+static char*
+GetElemCharPtr (Elem_t* elem);
 
-// #define ListFindElem ListFindElemSSE3
+static __m128i
+GetElemM128i (Elem_t* elem);
 
-// #ifdef ...
-// int ListFindElem() { return ListFindtFindElem ListFindEleElemAVX(...); }
-// int ListFindElem() { return ListFindElemSSE3(...); }
-// int ListFindElem() { return ListFindElemSingle(...); }
+static char*
+GetElemCharPtr (Elem_t* elem)
+{
+    #ifdef UNION
+        return elem->data.str;
+    #else 
+        return elem->data;
+    #endif
+}
 
-
-// #ifdef AVX // sse sse2 ssse3 mmx simd loadu 
-static int
-ListFindElem_avx (List* list,
-                  avx_t value);
-// #endif
+static __m128i
+GetElemM128i (Elem_t* elem)
+{
+    #ifdef UNION
+        return elem->data.m128i;
+    #else 
+        return _mm_load_si128 ((__m128i*)elem->data);
+    #endif
+}
 
 static StatusCalloc
 ListStructRealloc (List *list);
+
+////-----------------------------------------------/////
+
+// Index_t
+// ListFindElemString (List* list, 
+//                     Elem_t elem);
+// Index_t
+// ListFindElemUnion  (List* list, 
+//                     Elem_t elem);
+
+
+// #ifdef UNION
+//     Index_t ListFindElem (List* list, Elem_t elem) { return ListFindElemUnion (list, elem); }
+// #else 
+// /**
+//  * string
+//  * simple
+//  * single
+//  */
+//     Index_t ListFindElem (List* list, Elem_t elem) { return ListFindElemString (list, elem); }
+// #endif
+
+////-------------------------------------///
+
 
 List*
 ListStructCtor ()
@@ -89,98 +121,35 @@ ListFindElem (List* list,
 {
     assert (list);
 
-// _mm_loadu_si128 (потом без u (да да, ищи выравнивание))
-
-#ifndef simpleVersion
-
-    if (elem.length == 16)
+    if (elem.length == 16) 
     {
-    #ifdef loadInUnion_m128
-        return ListFindElem_avx (list, elem.data.m128i);
-    #endif
+        avx_t value = GetElemM128i (&elem);
 
-    #ifdef loadInUnionStr
-        char* str = elem.data.str;
-        #ifdef loadInUnionStrWithoutAlignment
-            avx_t avx = _mm_load_si128 ((__m128i*)str);
-        #else
-            avx_t avx = _mm_loadu_si128 ((__m128i*)str);
-        #endif
-    #else /* loadInStr */
-            avx_t avx = _mm_loadu_si128 ((__m128i*)elem.data);
-    #endif
-        return ListFindElem_avx (list, avx);
+        union 
+        {
+            __m128i m128i;
+            size_t arr[2];
+        } cmp;
+
+        for (size_t i = 0; i < list->size; i++)
+        { 
+            cmp.m128i = value - GetElemM128i (&list->data[i]);
+            if (cmp.arr[0] == 0 && cmp.arr[1] == 0)
+            {
+                return (int)i;
+            }
+        }
+
+        return List::ELEM_NOT_FOUND;
     }
-
-#endif
 
     for (size_t i = 0; i < list->size; i++)
     {
         if (list->data[i].length == elem.length && 
-
-#ifdef BufferAsUnion
-            strncmp (elem.data.str, list->data[i].data.str, (size_t)elem.length) == 0)
-#else 
-	        strncmp (elem.data,     list->data[i].data,     (size_t)elem.length) == 0)
-#endif
-	    {
-
-            return (int)i;
-	    }
-    }
-
-    return List::ELEM_NOT_FOUND;
-}
-
-static Index_t
-ListFindElem_avx (List* list, avx_t value)
-{
-    assert (list);
-
-    union 
-    {
-        __m128i m128i;
-        size_t arr[2];
-    } cmp;
-    
-    __m128i mAll1 = _mm_set1_epi8 ((char)0xff);
-
-    for (size_t i = 0; i < list->size; i++)
-    {
-
-    #ifdef loadInUnion_m128
-        avx_t elem = list->data[i].data.m128i;
-
-        cmp.m128i = value - elem;
-        if (cmp.arr[0] == 0 && cmp.arr[1] == 0)
+	        strncmp (GetElemCharPtr (&elem), GetElemCharPtr(&list->data[i]), (size_t)elem.length) == 0)
 	    {
             return (int)i;
 	    }
-
-    #else
-
-        #ifdef loadInUnionStr
-            char* str = list->data[i].data.str;
-            #ifdef loadInUnionStrWithoutAlignment
-                avx_t elem = _mm_load_si128 ((__m128i*)str);
-            #else
-                avx_t elem = _mm_loadu_si128 ((__m128i*)str);
-            #endif
-        #else /* loadInStr */
-            avx_t elem = _mm_loadu_si128 ((__m128i*)list->data[i].data);
-        #endif
-        
-        cmp.m128i = value - elem;
-        if (cmp.arr[0] == 0 && cmp.arr[1] == 0)
-	    {
-            return (int)i;
-	    }
-        // if (_mm_testz_si128 (value - elem, mAll1) == 1)
-	    // {
-        //     return (int)i;
-	    // }
-
-    #endif
     }
 
     return List::ELEM_NOT_FOUND;
@@ -204,15 +173,7 @@ ListStructDump (List* list)
         {
             printf ("len = %-2d   ", list->data[i].length);
             printf ("nCopies = %-5d ", list->data[i].nCopies);
-
-            for (int j = 0; j < list->data[i].length; j++)
-            {
-#ifdef BufferAsUnion
-                printf ("%c", (list->data[i].data.str[j]));
-#else 
-                printf ("%c", (list->data[i].data[j]));
-#endif
-            }
+            printf ("%s", GetElemCharPtr (&list->data[i]));
         }
         else printf ("pn ");
 

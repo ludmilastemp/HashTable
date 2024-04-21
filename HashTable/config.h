@@ -6,7 +6,9 @@
 #include <nmmintrin.h>
 
     typedef __m128i avx_t; 
-#ifdef BufferAsUnion
+    
+// #ifdef AVX // sse sse2 ssse3 mmx simd loadu 
+#ifdef UNION
 
     union Word
     {
@@ -15,17 +17,16 @@
     };
 #endif
 
-#ifdef BufferAsUnion
+#ifdef UNION
 typedef Word Data_t;   
 #else
 typedef char* Data_t;
 #endif
 
 typedef unsigned long long Hash_t;
-typedef char* HashData_t;
+typedef Data_t HashData_t;
 
-const size_t sizeHashTable = 401;//3
+const size_t sizeHashTable = 403;
 const int    sizeWord  = sizeof (__m128i);
-const int    nHashFunc = 6; // fe
 
 #endif /* STL_config */

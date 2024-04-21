@@ -3,18 +3,12 @@
 #include "HashTable/hashTable.h"
 #include "HashTable/hashs.h"
 #include <immintrin.h>
-                                       
+                       
 int main (const int argc, const char** argv)
 {
     if (argc == 1) return 0;
 
-//     size_t time1 = 0;
-//     size_t time2 = 0;
-// time1 = __rdtsc ();
-// time2 = __rdtsc ();
-// printf ("%lu\n", (time2 - time1));
-
-    File* file = FileProcess ("test.txt");
+    File* file = FileProcess ("test2.txt");
     assert (file);
 
     // printf ("nStrings = %lu\n", file->nStrings);
@@ -50,7 +44,7 @@ int main (const int argc, const char** argv)
         for (size_t i = 0; i < file->nStrings; i++)
         {
             Elem_t elem = { 0 };
-#ifdef BufferAsUnion
+#ifdef UNION
             int len = 1;
             if (file->words[iBuf].str[16 - 1] != 0) len++;
             iBuf += len;
@@ -69,9 +63,6 @@ int main (const int argc, const char** argv)
             HashTableInsert (hashTable, elem);
         }
 
-        // printf ("\n\nnDuplicateElem = %lu\n\n", hashTable->nDuplicateElem);
-        // printf ("\n\nnUniqueElem    = %lu\n\n", hashTable->nUniqueElem);
-        
         //  HashTableDump (hashTable);
 
         HashTableDtor (hashTable);

@@ -61,12 +61,7 @@ HashTableInsert (HashTable* hashTable,
 {
     assert (hashTable);
     
-#ifdef BufferAsUnion
-    size_t indexList = hashTable->HashFunc (elem.data.str) % hashTable->capacity; 
-#else 
     size_t indexList = hashTable->HashFunc (elem.data) % hashTable->capacity; 
-#endif
-
     hashTable->nDuplicateElem++;   
 
     int indexElem = ListFindElem (hashTable->list[indexList],

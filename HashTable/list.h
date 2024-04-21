@@ -11,7 +11,7 @@ typedef int Index_t;
 
 struct Elem
 {
-    Data_t data;    // char*
+    Data_t data;    // char* // Word
     int    length;  
     int    nCopies;       
                 
@@ -45,8 +45,8 @@ Index_t
 ListInsert (List* list,
             Elem_t elem);
 
-Index_t
-ListFindElem (List* list,
+Index_t 
+ListFindElem (List* list, 
               Elem_t elem);
 
 void

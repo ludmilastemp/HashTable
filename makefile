@@ -1,51 +1,26 @@
-simple:
-	g++ main.cpp					  	\
-		HashTable/list.cpp            	\
-		HashTable/hashs.cpp 	      	\
-		HashTable/hashTable.cpp       	\
-		FileProcess/fileProcess.cpp   	\
-		-o simple.exe -O2 $(FLAGS_AVX) $(FLAGS) -DsimpleVersion 
 
-loadInStr:
-	g++ main.cpp					  	\
-		HashTable/list.cpp            	\
-		HashTable/hashs.cpp 	      	\
-		HashTable/hashTable.cpp       	\
-		FileProcess/fileProcess.cpp   	\
-		-o loadInStr.exe -O2 $(FLAGS_AVX) $(FLAGS) 
+FLAGS_OPT = -O2
 
-loadInUnionStr:
-	g++ main.cpp					  	\
-		HashTable/list.cpp            	\
-		HashTable/hashs.cpp 	      	\
-		HashTable/hashTable.cpp       	\
-		FileProcess/fileProcess.cpp   	\
-		-o loadInUnionStr.exe -O2 $(FLAGS_AVX) $(FLAGS) \
-		-DBufferAsUnion -DloadInUnionStr
+a.exe:
+	g++ main.cpp							\
+		HashTable/list.cpp            		\
+		HashTable/hashs.cpp 	      		\
+		HashTable/hashTable.cpp       		\
+		FileProcess/fileProcess.cpp   		\
+		$(FLAGS_OPT) $(FLAGS_AVX) $(FLAGS)	\
+		-o a.exe
+		
+union:
+	g++ main.cpp					  		\
+		HashTable/list.cpp            		\
+		HashTable/hashs.cpp 	      		\
+		HashTable/hashTable.cpp       		\
+		FileProcess/fileProcess.cpp   		\
+		$(FLAGS_OPT) $(FLAGS_AVX) $(FLAGS)	\
+		-DUNION								\
+		-o union.exe
 
-loadInUnionStrWithoutAlignment:
-	g++ main.cpp					  	\
-		HashTable/list.cpp            	\
-		HashTable/hashs.cpp 	      	\
-		HashTable/hashTable.cpp       	\
-		FileProcess/fileProcess.cpp   	\
-		-o loadInUnionStrWithoutAlignment.exe -O2 $(FLAGS_AVX) $(FLAGS) \
-		-DBufferAsUnion -DloadInUnionStr -DloadInUnionStrWithoutAlignment
-
-loadInUnion_m128:
-	g++ main.cpp					  	\
-		HashTable/list.cpp            	\
-		HashTable/hashs.cpp 	      	\
-		HashTable/hashTable.cpp       	\
-		FileProcess/fileProcess.cpp   	\
-		-o loadInUnion_m128.exe -O2 $(FLAGS_AVX) $(FLAGS) \
-		-DBufferAsUnion -DloadInUnionStr -DloadInUnion_m128
-
-# sudo sysctl kernel.perf_event_paranoid=-1
-# $ perf record --call-graph=dwarf ./a.exe 4
-# $ perf report
-
-.PHONY: a.exe
+.PHONY: a.exe union
 
  FLAGS_AVX = -mmmx						\
  		-msse 							\
@@ -60,7 +35,6 @@ loadInUnion_m128:
 FLAGS = -D											\
 		_DEBUG										\
 		-ggdb3										\
-		-O0											\
 		-pie										\
 		-std=c++17									\
 		-Waggressive-loop-optimizations 			\

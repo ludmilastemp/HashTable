@@ -1,5 +1,18 @@
 #include "fileProcess.h"
 
+static char*
+GetElemPtr (void* buffer, int nElem, int len);
+
+static char*
+GetElemPtr (void* buffer, int nElem, int len)
+{
+    #ifdef UNION
+        return &((Data_t*)buffer)[nElem + len / 16].str[len % 16];
+    #else 
+        return &((char*)buffer)[nElem * 16 + len];
+    #endif
+}
+
 File* 
 STL_Fread (const char* nameFile)
 {
@@ -27,7 +40,7 @@ STL_Fread (const char* nameFile)
 
     file->size = fread (file->buffer, sizeof (char), file->size, fp);
 
-#ifdef BufferAsUnion
+#ifdef UNION
     file->words = nullptr;
 #endif
 
@@ -49,11 +62,12 @@ FileProcess (const char* nameFile)
     size_t sizeBuffer = file->size / 16;
     char* ptr = file->buffer;
 
-#ifdef BufferAsUnion
+#ifdef UNION
     Data_t* buffer = (Data_t*) calloc (sizeBuffer, sizeof (Data_t));
 #else 
     char* buffer = (char*) calloc (sizeBuffer, sizeof (char));
 #endif
+
     if (buffer == nullptr) return nullptr;
     
     for (int iBuf = 0; ptr != file->buffer + file->size - 1; 
@@ -65,11 +79,13 @@ FileProcess (const char* nameFile)
         if ((size_t)iBuf * 16 >= sizeBuffer - sizeWord * 3)
         {
             sizeBuffer *= 2;
-#ifdef BufferAsUnion
+            
+#ifdef UNION
             Data_t* tmp = (Data_t*) realloc (buffer, sizeBuffer * sizeof (Data_t));
 #else 
             char* tmp = (char*) realloc (buffer, sizeBuffer * sizeof (char));
-#endif                        
+#endif           
+
             if (tmp == nullptr) 
             {
                 STL_Fclose (file);
@@ -92,11 +108,7 @@ FileProcess (const char* nameFile)
         while (ptr != file->buffer + file->size - 1 
                && isalpha (*ptr))
         {
-#ifdef BufferAsUnion
-            buffer[iBuf + len / 16].str[len % 16] = *ptr;
-#else 
-            buffer[iBuf + len] = *ptr;
-#endif
+            *GetElemPtr (buffer, iBuf, len) = *ptr;
             ptr++;
             len++;
         }
@@ -106,39 +118,23 @@ FileProcess (const char* nameFile)
          */
         if (len > sizeWord - 1)
         {   
-#ifdef BufferAsUnion 
-            iBuf++;
-#else 
-            iBuf += sizeWord;
-#endif
-
             for (; len < sizeWord * 2; len++)
             {
-#ifdef BufferAsUnion
-                buffer[iBuf].str[len - sizeWord] = 0;
-#else
-                buffer[iBuf + len - sizeWord] = 0;
-#endif
+                *GetElemPtr (buffer, iBuf, len) = 0;
             }
+
+            iBuf++;
         }
 
         for (; len < sizeWord; len++)
         {
-#ifdef BufferAsUnion
-            buffer[iBuf].str[len] = 0;
-#else
-            buffer[iBuf + len] = 0;
-#endif
+            *GetElemPtr (buffer, iBuf, len) = 0;
         }
 
-#ifdef BufferAsUnion
         iBuf++;
-#else
-        iBuf += sizeWord;
-#endif
     }
 
-#ifdef BufferAsUnion
+#ifdef UNION
     file->words  = buffer;
 #else
     free (file->buffer);
@@ -159,7 +155,7 @@ STL_Fclose (struct File* file)
     free (file->buffer);
     file->buffer   = nullptr;
 
-#ifdef BufferAsUnion
+#ifdef UNION
     free (file->words);
     file->words    = nullptr;
 #endif

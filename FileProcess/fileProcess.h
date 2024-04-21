@@ -8,12 +8,18 @@
 #include <sys/stat.h>
 #include "../HashTable/config.h"
 
+#ifdef UNION
+    typedef Word Data_t;   
+#else
+    typedef char* Data_t;
+#endif
+
 struct File
 {
     const char* name;
     char*       buffer;
 
-#ifdef BufferAsUnion
+#ifdef UNION
     Data_t*     words;
 #endif
 
