@@ -1,49 +1,56 @@
 
 FLAGS_OPT = -O3
 
-simple:
+simple: hashs-asm.o
 	g++ main.cpp							\
 		HashTable/list.cpp            		\
-		HashTable/hashs.cpp 	      		\
 		HashTable/hashTable.cpp       		\
+		HashTable/hashs.cpp       			\
+		hashs-asm.o							\
 		FileProcess/fileProcess.cpp   		\
 		$(FLAGS_OPT) $(FLAGS_AVX) $(FLAGS)	\
 		-DFIRST_OPTIMIZATION				\
 		-o simple.exe
 		
-union:
+union: hashs-asm.o
 	g++ main.cpp					  		\
 		HashTable/list.cpp            		\
-		HashTable/hashs.cpp 	      		\
 		HashTable/hashTable.cpp       		\
+		HashTable/hashs.cpp       			\
+		hashs-asm.o							\
 		FileProcess/fileProcess.cpp   		\
 		$(FLAGS_OPT) $(FLAGS_AVX) $(FLAGS)	\
 		-DFIRST_OPTIMIZATION				\
 		-DUNION								\
 		-o union.exe
 
-simple-avx:
+simple-avx: hashs-asm.o
 	g++ main.cpp							\
 		HashTable/list.cpp            		\
-		HashTable/hashs.cpp 	      		\
 		HashTable/hashTable.cpp       		\
+		HashTable/hashs.cpp       			\
+		hashs-asm.o							\
 		FileProcess/fileProcess.cpp   		\
 		$(FLAGS_OPT) $(FLAGS_AVX) $(FLAGS)	\
 		-DFIRST_OPTIMIZATION				\
 		-DSECOND_OPTIMIZATION				\
 		-o simple-avx.exe
 		
-union-avx:
+union-avx: hashs-asm.o
 	g++ main.cpp					  		\
 		HashTable/list.cpp            		\
-		HashTable/hashs.cpp 	      		\
 		HashTable/hashTable.cpp       		\
+		HashTable/hashs.cpp       			\
+		hashs-asm.o							\
 		FileProcess/fileProcess.cpp   		\
 		$(FLAGS_OPT) $(FLAGS_AVX) $(FLAGS)	\
 		-DUNION								\
 		-DFIRST_OPTIMIZATION				\
 		-DSECOND_OPTIMIZATION				\
 		-o union-avx.exe
+
+hashs-asm.o: HashTable/crc32.asm
+	nasm -f elf64 HashTable/crc32.asm -o hashs-asm.o
 
 .PHONY: simple union simple-avx union-avx
 

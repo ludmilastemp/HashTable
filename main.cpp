@@ -3,6 +3,7 @@
 #include "HashTable/hashTable.h"
 #include "HashTable/hashs.h"
 #include <immintrin.h>
+#include <stdalign.h>
                 
 int main (const int argc, const char** argv)
 {
@@ -41,7 +42,6 @@ int main (const int argc, const char** argv)
         /**
          * Filling the hash table
          */
-        // int i = 0;
         for (size_t i = 0; i < file->nStrings; i++)
         {
             HashTableInsert (hashTable, &file->words[i]);

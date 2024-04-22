@@ -7,6 +7,8 @@
 
     // return ~crc32 % 32;
 
+extern "C" Hash_t CRC32ASM (const char* data);
+
 static size_t 
 MyStrlen (HashData_t* data);
 
@@ -195,11 +197,5 @@ HashCRC32AVX (HashData_t* data)
 {
     assert (GetElemCharPtr (data));
 
-    unsigned int hash = 0xffffffff;
-    for (int i = 0; GetElemCharPtr (data)[i] != 0; i++)
-    {
-        hash = (hash >> 8) ^ CRC32Table [(hash ^ (unsigned int)GetElemCharPtr (data)[i]) & 0xff];
-    }
-
-    return (Hash_t)~hash;
+    return CRC32ASM (GetElemCharPtr (data));
 }
