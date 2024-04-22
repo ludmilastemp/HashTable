@@ -8,6 +8,7 @@ simple:
 		HashTable/hashTable.cpp       		\
 		FileProcess/fileProcess.cpp   		\
 		$(FLAGS_OPT) $(FLAGS_AVX) $(FLAGS)	\
+		-DFIRST_OPTIMIZATION				\
 		-o simple.exe
 		
 union:
@@ -17,6 +18,7 @@ union:
 		HashTable/hashTable.cpp       		\
 		FileProcess/fileProcess.cpp   		\
 		$(FLAGS_OPT) $(FLAGS_AVX) $(FLAGS)	\
+		-DFIRST_OPTIMIZATION				\
 		-DUNION								\
 		-o union.exe
 
@@ -27,7 +29,8 @@ simple-avx:
 		HashTable/hashTable.cpp       		\
 		FileProcess/fileProcess.cpp   		\
 		$(FLAGS_OPT) $(FLAGS_AVX) $(FLAGS)	\
-		-DAVX								\
+		-DFIRST_OPTIMIZATION				\
+		-DSECOND_OPTIMIZATION				\
 		-o simple-avx.exe
 		
 union-avx:
@@ -38,7 +41,8 @@ union-avx:
 		FileProcess/fileProcess.cpp   		\
 		$(FLAGS_OPT) $(FLAGS_AVX) $(FLAGS)	\
 		-DUNION								\
-		-DAVX								\
+		-DFIRST_OPTIMIZATION				\
+		-DSECOND_OPTIMIZATION				\
 		-o union-avx.exe
 
 .PHONY: simple union simple-avx union-avx
@@ -53,8 +57,10 @@ union-avx:
 		-mavx2 							
  
 
+#-fsanitize=leak # тут сидит выравнивание 	\
+
 FLAGS = 											\
-		-fsanitize=leak # тут сидит выравнивание 	\
+		-fsanitize=leak								\
 		-D											\
 		_DEBUG										\
 		-ggdb3										\
@@ -119,6 +125,6 @@ FLAGS = 											\
 		-fPIE										\
 		-fsized-deallocation						\
 		-fstack-protector							\
-		-fstrict-overflow							\
+		-fstrict-overflow							
 		-fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,leak,nonnull-attribute,null,object-size,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr
 		

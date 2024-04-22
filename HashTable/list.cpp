@@ -11,7 +11,7 @@ ListStructRealloc (List *list);
 
 ////-----------------------------------------------/////
 
-Index_t
+Index_t /// static - ?
 ListFindElemSimple (List* list, 
                     Data_t* data);
 
@@ -19,7 +19,7 @@ Index_t
 ListFindElemAVX (List* list, 
                  Data_t* data);
 
-#ifndef AVX 
+#ifndef FIRST_OPTIMIZATION
     Index_t ListFindElem (List* list, Data_t* data) { return ListFindElemSimple (list, data); }
 #else 
 /**

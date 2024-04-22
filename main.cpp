@@ -20,7 +20,8 @@ int main (const int argc, const char** argv)
         &HashStrlen,
         &HashSumLetterASCII,
         &HashRor,
-        &HashRol
+        &HashRol,
+        &HashCRC32
     };
 
     size_t timeBegin = __rdtsc ();

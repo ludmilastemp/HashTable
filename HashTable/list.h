@@ -9,19 +9,7 @@
 #include "realize.h" 
 
 typedef int Index_t;
-
-struct Elem
-{
-    Data_t data;    // char* // Word
-    int    nCopies;       
-                
-    // static constexpr Data_t DATA_POISON     = { 0, nullptr };
-    static const     int    LEN_ELEM_POISON = -1;
-    static const     int    N_ELEM_POISON   = -1;      
-};
-
 typedef Data_t Elem_t;
-// typedef Elem Elem_t;
 
 struct List
 {
