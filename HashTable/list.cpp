@@ -11,24 +11,24 @@ ListStructRealloc (List *list);
 
 ////-----------------------------------------------/////
 
-// Index_t
-// ListFindElemString (List* list, 
-//                     Data_t data);
-// Index_t
-// ListFindElemUnion  (List* list, 
-//                     Data_t data);
+Index_t
+ListFindElemSimple (List* list, 
+                    Data_t* data);
 
+Index_t
+ListFindElemAVX (List* list, 
+                 Data_t* data);
 
-// #ifdef UNION
-//     Index_t ListFindElem (List* list, Data_t data) { return ListFindElemUnion (list, elem); }
-// #else 
-// /**
-//  * string
-//  * simple
-//  * single
-//  */
-//     Index_t ListFindElem (List* list, Data_t data) { return ListFindElemString (list, elem); }
-// #endif
+#ifndef AVX 
+    Index_t ListFindElem (List* list, Data_t* data) { return ListFindElemSimple (list, data); }
+#else 
+/**
+ * string
+ * simple
+ * single
+ */
+    Index_t ListFindElem (List* list, Data_t* data) { return ListFindElemAVX (list, data); }
+#endif
 
 ////-------------------------------------///
 
@@ -89,33 +89,11 @@ ListInsert (List* list, Data_t* data)
 }
 
 Index_t
-ListFindElem (List* list, 
-              Data_t* data)
+ListFindElemSimple (List* list, 
+                    Data_t* data)
 {
     assert (list);
-
-    if (1) 
-    {
-        avx_t value = GetElemAvx (data);
-
-        union 
-        {
-            avx_t avx;
-            size_t arr[sizeWord / sizeof (size_t)];
-        } cmp;
-
-        for (size_t i = 0; i < list->size; i++)
-        { 
-            cmp.avx = value - GetElemAvx (list->data[i]);
-            if (cmp.arr[0] == 0 && cmp.arr[1] == 0 && ////////
-                cmp.arr[2] == 0 && cmp.arr[3] == 0)
-            {
-                return (int)i;
-            }
-        }
-
-        return List::ELEM_NOT_FOUND;
-    }
+    assert (data);
 
     for (size_t i = 0; i < list->size; i++)
     {
@@ -123,6 +101,27 @@ ListFindElem (List* list,
 	    {
             return (int)i;
 	    }
+    }
+
+    return List::ELEM_NOT_FOUND;
+}
+
+Index_t
+ListFindElemAVX (List* list, 
+                 Data_t* data)
+{
+    assert (list);
+    assert (data);
+
+    avx_t value = GetElemAvx (data);
+    avx_t mAll1 = _mm256_set1_epi16 ((short)0xffff);
+    
+    for (size_t i = 0; i < list->size; i++)
+    { 
+        if (_mm256_testz_si256 (value - GetElemAvx (list->data[i]), mAll1) == 1)
+        {
+            return (int)i;
+        }
     }
 
     return List::ELEM_NOT_FOUND;
@@ -142,11 +141,11 @@ ListStructDump (List* list)
     {
         printf ("%-3lu ", i);
 
-        // if (list->data[i].nCopies != Elem::N_ELEM_POISON)
+        if (GetElemCharPtr (list->data[i]) != nullptr)
         {
             printf ("%s", GetElemCharPtr (list->data[i]));
         }
-        // else printf ("pn ");
+        else printf ("pn ");
 
         printf ("\n");
     }

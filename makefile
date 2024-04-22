@@ -1,14 +1,14 @@
 
-FLAGS_OPT = -O2
+FLAGS_OPT = -O3
 
-a.exe:
+simple:
 	g++ main.cpp							\
 		HashTable/list.cpp            		\
 		HashTable/hashs.cpp 	      		\
 		HashTable/hashTable.cpp       		\
 		FileProcess/fileProcess.cpp   		\
 		$(FLAGS_OPT) $(FLAGS_AVX) $(FLAGS)	\
-		-o a.exe
+		-o simple.exe
 		
 union:
 	g++ main.cpp					  		\
@@ -20,7 +20,28 @@ union:
 		-DUNION								\
 		-o union.exe
 
-.PHONY: a.exe union
+simple-avx:
+	g++ main.cpp							\
+		HashTable/list.cpp            		\
+		HashTable/hashs.cpp 	      		\
+		HashTable/hashTable.cpp       		\
+		FileProcess/fileProcess.cpp   		\
+		$(FLAGS_OPT) $(FLAGS_AVX) $(FLAGS)	\
+		-DAVX								\
+		-o simple-avx.exe
+		
+union-avx:
+	g++ main.cpp					  		\
+		HashTable/list.cpp            		\
+		HashTable/hashs.cpp 	      		\
+		HashTable/hashTable.cpp       		\
+		FileProcess/fileProcess.cpp   		\
+		$(FLAGS_OPT) $(FLAGS_AVX) $(FLAGS)	\
+		-DUNION								\
+		-DAVX								\
+		-o union-avx.exe
+
+.PHONY: simple union simple-avx union-avx
 
  FLAGS_AVX = -mmmx						\
  		-msse 							\
@@ -32,7 +53,9 @@ union:
 		-mavx2 							
  
 
-FLAGS = -D											\
+FLAGS = 											\
+		-fsanitize=leak # тут сидит выравнивание 	\
+		-D											\
 		_DEBUG										\
 		-ggdb3										\
 		-pie										\

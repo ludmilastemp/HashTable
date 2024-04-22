@@ -8,8 +8,10 @@ int main (const int argc, const char** argv)
 {
     if (argc == 1) return 0;
 
-    File* file = FileProcess ("test2.txt");
+    File* file = FileProcess ("test.txt");
     assert (file);
+
+    // printf ("buffer = %p\n", file->words); 
 
     HashFunc_t hashArray[nHashFunc] = 
     {
