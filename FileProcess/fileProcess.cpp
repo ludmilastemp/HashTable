@@ -18,16 +18,17 @@ STL_Fread (const char* nameFile)
 
     file->size = (size_t)buff.st_size;
 
-    file->buffer = (char*) calloc (file->size + 1, sizeof (char));
+    // file->buffer = (Data_t*) calloc (file->size + 1, sizeof (char));
+    file->buffer = (Data_t*) aligned_alloc (32 /* sizeWord */, (file->size + 1) * sizeof (char));
     if (file->buffer == nullptr) 
     {
         free (file);
         return nullptr;
     }
 
-    file->size = fread (file->buffer, sizeof (char), file->size, fp);
-    file->buffer[file->size] = 0; 
-    file->words = nullptr;
+    file->size = fread ((char*)file->buffer, sizeof (char), file->size, fp);
+    ((char*)file->buffer)[file->size] = 0; 
+    file->nStrings = file->size / sizeWord;
 
     fclose (fp);
 
@@ -45,12 +46,12 @@ FileProcess (const char* nameFile)
     file->nStrings = 0;
     
     size_t sizeBuffer = file->size / sizeWord + 1;
-    char* ptr = file->buffer;
+    char* ptr = (char*)file->buffer;
 
     Data_t* buffer = (Data_t*) calloc (sizeBuffer, sizeof (Data_t));
     if (buffer == nullptr) return nullptr;
     
-    for (int iBuf = 0; ptr != file->buffer + file->size - 1; 
+    for (int iBuf = 0; ptr != (char*)file->buffer + file->size - 1; 
          file->nStrings++)
     {
         /**
@@ -61,9 +62,9 @@ FileProcess (const char* nameFile)
             sizeBuffer *= 2;
             
             Data_t* tmp = (Data_t*) realloc (buffer, sizeBuffer * sizeof (Data_t)); 
-
             if (tmp == nullptr) 
             {
+                free (buffer);
                 STL_Fclose (file);
                 return nullptr;
             }
@@ -73,7 +74,7 @@ FileProcess (const char* nameFile)
         /**
          * Skip no alpha
          */
-        while (ptr != file->buffer + file->size - 1
+        while (ptr != (char*)file->buffer + file->size - 1
                && !isalpha (*ptr)) 
             ptr++; 
 
@@ -81,7 +82,7 @@ FileProcess (const char* nameFile)
          * Copy word
          */
         int len = 0;
-        while (ptr != file->buffer + file->size - 1 
+        while (ptr != (char*)file->buffer + file->size - 1 
                && isalpha (*ptr))
         {
             *GetElemPtr (buffer, iBuf, len) = *ptr;
@@ -110,10 +111,33 @@ FileProcess (const char* nameFile)
         iBuf++;
     }
 
-    file->words = buffer;
+    free (file->buffer);
+    file->buffer = buffer;
     file->nStrings--;
 
     return file;
+}
+
+void 
+STL_Fprint (const char* nameFile, struct File* file)
+{
+    assert (nameFile);
+    assert (file);
+
+    FILE* fp = fopen (nameFile, "wb");
+    if (fp == nullptr) return;
+
+    for (size_t i = 0; i < file->nStrings; i++)
+    {
+        char* str = GetElemCharPtr (&file->buffer[i]);
+
+        for (size_t j = 0; j < sizeWord; j++)
+        {
+            fprintf (fp, "%c", str[j]); 
+        }
+    }
+
+    fclose (fp);
 }
 
 File* 
@@ -121,12 +145,8 @@ STL_Fclose (struct File* file)
 {
     if (file == nullptr) return 0;
     
-    free (file->buffer);
+    if (file->buffer) free (file->buffer);
     file->buffer   = nullptr;
-
-    free (file->words);
-    file->words    = nullptr;
-
     file->name     = nullptr;
     file->size     = 0;
     file->nStrings = 0;

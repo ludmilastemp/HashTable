@@ -4,15 +4,17 @@
 #include "HashTable/hashs.h"
 #include <immintrin.h>
 #include <stdalign.h>
-                
+    
 int main (const int argc, const char** argv)
 {
     if (argc == 1) return 0;
 
-    File* file = FileProcess ("test.txt");
+    // File* file_tmp = FileProcess ("test2.txt");
+    // STL_Fprint ("test2.txt-process", file_tmp);
+    File* file = STL_Fread ("test2.txt-process");
     assert (file);
 
-    // printf ("buffer = %p\n", file->words); 
+    printf ("buffer = %p\n", file->buffer); 
 
     HashFunc_t hashArray[nHashFunc] = 
     {
@@ -44,7 +46,7 @@ int main (const int argc, const char** argv)
          */
         for (size_t i = 0; i < file->nStrings; i++)
         {
-            HashTableInsert (hashTable, &file->words[i]);
+            HashTableInsert (hashTable, &file->buffer[i]);
         }
 
         //  HashTableDump (hashTable);
@@ -54,7 +56,7 @@ int main (const int argc, const char** argv)
 
     size_t timeEnd = __rdtsc ();
 
-    printf ("\n\ntime = %lu\n\n", (timeEnd - timeBegin) / 10000000);
+    printf ("\n\ntime = %lu\n\n", (timeEnd - timeBegin) / 1000000);
 
     STL_Fclose (file);
 

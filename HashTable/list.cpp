@@ -51,8 +51,7 @@ ListStructCtor ()
 
     for (size_t i = 0; i < List::LIST_INITIAL_CAPACITY; ++i)
     {
-        // list->data[i].elem    = Elem::DATA_POISON;
-        // list->data[i].nCopies = Elem::N_ELEM_POISON;
+        list->data[i] = nullptr;
     }
 
     return list;
@@ -75,7 +74,7 @@ Index_t
 ListInsert (List* list, Data_t* data)
 {
     assert (list);
-
+    
     if (list->size >= list->capacity - 1) 
     {
         if (ListStructRealloc (list) == ERROR_CALLOC)
@@ -144,8 +143,14 @@ ListStructDump (List* list)
         if (GetElemCharPtr (list->data[i]) != nullptr)
         {
             printf ("%s", GetElemCharPtr (list->data[i]));
+            // printf ("\n\ni = %d ptr = %p\n", i, GetElemCharPtr (list->data[i]));
+            // for (int j = 0; j < 10; j++)
+            //     printf ("%d %d %c\n", j, GetElemCharPtr (list->data[i])[j], GetElemCharPtr (list->data[i])[j]);
         }
-        else printf ("pn ");
+        else 
+        {
+            printf ("pn ");
+        }
 
         printf ("\n");
     }
@@ -166,8 +171,7 @@ ListStructRealloc (List *list)
 
     for (size_t i = list->capacity / List::LIST_EXPAND_MULTIPLIER; i < list->capacity; ++i)
     {
-        // list->data[i].elem    = Elem::DATA_POISON;
-        // list->data[i].nCopies = Elem::N_ELEM_POISON;
+        list->data[i] = nullptr;
     }
 
     return OK_CALLOC;

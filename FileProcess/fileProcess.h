@@ -12,8 +12,7 @@
 struct File
 {
     const char* name;
-    char*       buffer;
-    Data_t*     words;
+    Data_t*     buffer;
     size_t      size;
     size_t      nStrings;
 };
@@ -23,6 +22,9 @@ STL_Fread (const char* nameFile);
 
 File* 
 FileProcess (const char* nameFile);
+
+void 
+STL_Fprint (const char* nameFile, struct File* file);
 
 File*
 STL_Fclose (struct File* file);

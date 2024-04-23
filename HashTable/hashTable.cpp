@@ -65,6 +65,12 @@ HashTableInsert (HashTable* hashTable,
     hashTable->nDuplicateElem++;   
 
     int indexElem = ListFindElem (hashTable->list[indexList], data);
+    // int sum = 0;
+    // for (int i = 0; i < 100; i++)
+    // {
+    //     indexElem = ListFindElem (hashTable->list[indexList], data);
+    //     sum += indexElem;
+    // }
 
     if (indexElem != List::ELEM_NOT_FOUND)    
     {
@@ -74,6 +80,7 @@ HashTableInsert (HashTable* hashTable,
     hashTable->nUniqueElem++;
     ListInsert (hashTable->list[indexList], data);
 
+    // return sum;
     return (int)indexList;
 }
 

@@ -4,7 +4,7 @@ global CRC32ASM
 section .text
 CRC32ASM:
 
-        movzx   edx, BYTE [rdi]
+;       movzx   edx, BYTE [rdi]      
         mov     eax, -1
 
 .for

@@ -1,16 +1,9 @@
 #include "hashs.h"
 
-    // unsigned int crc32 = 0xFFFFFFFF;
-    // for (size_t i = 0; GetElemCharPtr (data)[i] != '\0'; i++) {
-	// 	    crc32 = _mm_crc32_u8(crc32, (unsigned char) GetElemCharPtr (data)[i]);
-    // }
-
-    // return ~crc32 % 32;
-
-extern "C" Hash_t CRC32ASM (const char* data);
-
 static size_t 
 MyStrlen (HashData_t* data);
+
+extern "C" Hash_t CRC32ASM (const char* data);
 
 Hash_t
 HashCRC32Simple (HashData_t* data);
@@ -22,6 +15,18 @@ HashCRC32AVX (HashData_t* data);
     Hash_t HashCRC32 (HashData_t* data) { return HashCRC32Simple (data); }
 #else 
     Hash_t HashCRC32 (HashData_t* data) { return HashCRC32AVX (data); }
+#endif
+
+Hash_t
+HashRorSimple (HashData_t* data);
+
+Hash_t
+HashRorInlineAsm (HashData_t* data);
+
+#ifndef THIRD_OPTIMIZATION
+    Hash_t HashRor (HashData_t* data) { return HashRorSimple (data); }
+#else 
+    Hash_t HashRor (HashData_t* data) { return HashRorInlineAsm (data); }
 #endif
 
 Hash_t 
@@ -59,25 +64,90 @@ HashSumLetterASCII (HashData_t* data)
     for (size_t i = 0; i < len; i++)
     {
         sum += (Hash_t)(GetElemCharPtr (data)[i]);
-        if (sum >= sizeHashTable) sum %= sizeHashTable;
     }
 
     return sum;
 }
 
+/** https://gcc.gnu.org/onlinedocs/gcc/Extended-Asm.html */
+
 Hash_t 
-HashRor (HashData_t* data)
+HashRorSimple (HashData_t* data)
 {
     assert (GetElemCharPtr (data));
 
-    size_t len = MyStrlen (data);
-    Hash_t hash = (Hash_t)GetElemCharPtr (data)[0];
+    Hash_t hash = 0;
     
-    for (size_t i = 1; i < len; i++)
+    for (size_t i = 0; GetElemCharPtr (data)[i] != 0; i++)
     {
-        hash = ((hash >> 1) | (hash << CHAR_BIT * (sizeof(Hash_t) - 1))) 
+        hash = ((hash >> 1) | (hash << (CHAR_BIT * sizeof(Hash_t) - 1))) 
                 ^ (Hash_t)(GetElemCharPtr (data)[i]);
     }
+
+    return hash;
+}
+
+Hash_t 
+HashRorInlineAsm (HashData_t* data)
+{
+    assert (GetElemCharPtr (data));
+
+    Hash_t hash = 0;
+    char* str = GetElemCharPtr (data);
+    
+//     __asm__ (
+//         ".intel_syntax noprefix\n\n\n\n\n\t"
+
+//         "mov     rdi, %1\n\t"
+//         "movsx   rdx, BYTE PTR [rdi]\n\t"
+//         "xor     eax, eax\n\t"
+//         "add     rdi, 1\n\t"
+//         "test    dl, dl\n\t"
+//         "je      .L12%=\n"
+// ".L7%=:\n\t"
+//         "ror     rax\n\t"
+//         "add     rdi, 1\n\t"
+//         "xor     rax, rdx\n\t"
+//         "movsx   rdx, BYTE PTR -1[rdi]\n\t"
+//         "test    dl, dl\n\t"
+//         "jne     .L7%=\n\t"
+//         "ret\n"
+// ".L12%=:\n\t"
+//         "ret\n\t"
+
+//         "mov     %0, rax\n\t"
+
+//         ".att_syntax\n"
+
+//         :"=r"(hash)             /// hash = %0
+//         :"r"(str)               /// str = %1 
+//         :"%rax", "%rdi", "%rdx"
+//     );
+
+    __asm__ (
+        ".intel_syntax noprefix\n\n\n\n\n\t"
+
+        "mov     rdi, %1\n\t"
+        "xor     rax, rax\n"
+
+".for%=:\n\t"        
+        "movsx   rdx, BYTE PTR [rdi]\n\t"
+        "test    dl, dl\n\t"
+        "je      .ret%=\n\n\t"
+
+        "ror     rax\n\t"
+        "xor     rax, rdx\n\t"
+        "add     rdi, 1\n\t"
+        "jmp     .for%=\n"
+".ret%=:\n\t"
+        "mov     %0, rax\n\t"
+
+        ".att_syntax\n"
+
+        :"=r"(hash)             /// hash = %0
+        :"r"(str)               /// str = %1 
+        :"%rax", "%rdi", "%rdx"
+    );
 
     return hash;
 }
@@ -92,7 +162,7 @@ HashRol (HashData_t* data)
     
     for (size_t i = 1; i < len; i++)
     {
-        hash = ((hash << 1) | (hash >> CHAR_BIT * (sizeof(Hash_t) - 1))) 
+        hash = ((hash << 1) | (hash >> (CHAR_BIT * sizeof(Hash_t) - 1))) 
                 ^ (Hash_t)(GetElemCharPtr (data)[i]);
     }
 

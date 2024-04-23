@@ -1,6 +1,12 @@
 
 FLAGS_OPT = -O3
 
+fileProcess:
+	g++ FileProcess/main.cpp   				\
+		FileProcess/fileProcess.cpp   		\
+		$(FLAGS_OPT) $(FLAGS_AVX) $(FLAGS)	\
+		-o fileProcess.exe
+
 simple: hashs-asm.o
 	g++ main.cpp							\
 		HashTable/list.cpp            		\
@@ -9,7 +15,6 @@ simple: hashs-asm.o
 		hashs-asm.o							\
 		FileProcess/fileProcess.cpp   		\
 		$(FLAGS_OPT) $(FLAGS_AVX) $(FLAGS)	\
-		-DFIRST_OPTIMIZATION				\
 		-o simple.exe
 		
 union: hashs-asm.o
@@ -20,7 +25,6 @@ union: hashs-asm.o
 		hashs-asm.o							\
 		FileProcess/fileProcess.cpp   		\
 		$(FLAGS_OPT) $(FLAGS_AVX) $(FLAGS)	\
-		-DFIRST_OPTIMIZATION				\
 		-DUNION								\
 		-o union.exe
 
@@ -34,6 +38,7 @@ simple-avx: hashs-asm.o
 		$(FLAGS_OPT) $(FLAGS_AVX) $(FLAGS)	\
 		-DFIRST_OPTIMIZATION				\
 		-DSECOND_OPTIMIZATION				\
+		-DTHIRD_OPTIMIZATION				\
 		-o simple-avx.exe
 		
 union-avx: hashs-asm.o
@@ -47,6 +52,7 @@ union-avx: hashs-asm.o
 		-DUNION								\
 		-DFIRST_OPTIMIZATION				\
 		-DSECOND_OPTIMIZATION				\
+		-DTHIRD_OPTIMIZATION				\
 		-o union-avx.exe
 
 hashs-asm.o: HashTable/crc32.asm
@@ -63,11 +69,10 @@ hashs-asm.o: HashTable/crc32.asm
 		-mavx 							\
 		-mavx2 							
  
-
 #-fsanitize=leak # тут сидит выравнивание 	\
+		-fsanitize=leak								\
 
 FLAGS = 											\
-		-fsanitize=leak								\
 		-D											\
 		_DEBUG										\
 		-ggdb3										\
