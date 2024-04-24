@@ -1,50 +1,79 @@
 #include "list.h"
 
+enum ListError_t
+{
+    kSuccess      = 0,
+    kNoMemory     = -0xDED,
+    kInvalidIndex = -0xBAD,
+    //....
+};
+
+const char*
+ListGetErrorString( ListError_t error)
+{
+    switch ( error )
+    {
+    case kNoMemory:
+        return "Not enough memory\n";
+    case kInvalidIndex:
+        return "Invalid index\n";
+    //    ...
+
+    // #include
+    }
+}
+
+// LIST_ERROR( kNoMemory,     -0xDED, "Not enough memory")
+// LIST_ERROR( kInvalidIndex, -0xBAD, "Bad index")
+// LIST_ERROR( kNoMemory, -0xDED, "Not enough memory")
+// LIST_ERROR( kNoMemory, -0xDED, "Not enough memory")
+
+
+// _t??
 enum StatusCalloc
 {
     OK_CALLOC    = 0,
     ERROR_CALLOC = 1,
 };
 
-static StatusCalloc
-ListStructRealloc (List *list);
 
-////-----------------------------------------------/////
 
-Index_t /// static - ?
-ListFindElemSimple (List* list, 
-                    Data_t* data);
+static ListError_t ListStructRealloc (List *list);
 
-Index_t
-ListFindElemAVX (List* list, 
-                 Data_t* data);
+static StatusCalloc ListStructRealloc (List *list);
+
+// Index_t idx = ListFindElemAvx()
+// if ( idx == kNotFound )
+// {
+//    
+// }
+// if ( ListIsError(idx) )
+// { printf( ... ListGetErrorString(idx)); }
+
+bool ListIsError(int error)
+{
+    return error < 0;
+}
+
+static Index_t ListFindElemStrcmp (List* list, Data_t* data);
+static Index_t ListFindElemAVX    (List* list, Data_t* data); 
 
 #ifndef FIRST_OPTIMIZATION
-    Index_t ListFindElem (List* list, Data_t* data) { return ListFindElemSimple (list, data); }
+Index_t ListFindElem (List* list, Data_t* data) { return ListFindElemStrcmp (list, data); }
 #else 
-/**
- * string
- * simple
- * single
- */
-    Index_t ListFindElem (List* list, Data_t* data) { return ListFindElemAVX (list, data); }
+Index_t ListFindElem (List* list, Data_t* data) { return ListFindElemAVX (list, data); }
 #endif
 
-////-------------------------------------///
-
-
-List*
-ListStructCtor ()
+void
+ListStructCtor (List* list)
 {
-    List* list = (List*) calloc (1, sizeof (List));
-    if (list == nullptr) return nullptr;
+    assert (list);
 
     list->capacity = List::LIST_INITIAL_CAPACITY;
 
     if (ListStructRealloc (list) == ERROR_CALLOC) 
     {
-        free (list);
-        return nullptr;
+        return;
     }
 
     list->size = List::LIST_INITIAL_SIZE;
@@ -53,8 +82,6 @@ ListStructCtor ()
     {
         list->data[i] = nullptr;
     }
-
-    return list;
 }
 
 void 
@@ -66,19 +93,19 @@ ListStructDtor (List* list)
     list->data     = nullptr;
     list->capacity = 0;
     list->size     = 0;
-
-    free (list);
 }
 
 Index_t
-ListInsert (List* list, Data_t* data)
+ListInsert/*Elem*/ (List* list, Data_t* data)
 {
     assert (list);
     
     if (list->size >= list->capacity - 1) 
     {
         if (ListStructRealloc (list) == ERROR_CALLOC)
+        {
             return 0;
+        }
     } 
 
     list->data[list->size] = data;
@@ -87,8 +114,8 @@ ListInsert (List* list, Data_t* data)
     return (int)list->size - 1;
 }
 
-Index_t
-ListFindElemSimple (List* list, 
+static Index_t
+ListFindElemStrcmp (List* list, 
                     Data_t* data)
 {
     assert (list);
@@ -105,7 +132,7 @@ ListFindElemSimple (List* list,
     return List::ELEM_NOT_FOUND;
 }
 
-Index_t
+static Index_t
 ListFindElemAVX (List* list, 
                  Data_t* data)
 {
@@ -131,7 +158,7 @@ ListStructDump (List* list)
 {
     assert (list);
 
-    printf ("LIST %p\n", list);
+    // printf ("LIST %p\n", list);
     printf ("capacity = %lu\n", list->capacity);
     printf ("size = %lu\n", list->size);
 
@@ -143,9 +170,6 @@ ListStructDump (List* list)
         if (GetElemCharPtr (list->data[i]) != nullptr)
         {
             printf ("%s", GetElemCharPtr (list->data[i]));
-            // printf ("\n\ni = %d ptr = %p\n", i, GetElemCharPtr (list->data[i]));
-            // for (int j = 0; j < 10; j++)
-            //     printf ("%d %d %c\n", j, GetElemCharPtr (list->data[i])[j], GetElemCharPtr (list->data[i])[j]);
         }
         else 
         {

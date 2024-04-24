@@ -1,37 +1,29 @@
 #include "hashs.h"
 
-static size_t 
-MyStrlen (HashData_t* data);
+// -flto link time optimization
+extern "C" Hash_t HashCRC32Asm (const char* data);
 
-extern "C" Hash_t CRC32ASM (const char* data);
-
-Hash_t
-HashCRC32Simple (HashData_t* data);
-
-Hash_t
-HashCRC32AVX (HashData_t* data);
+static Hash_t HashCRC32Simple  (HashData_t* data);
+static Hash_t HashCRC32AVX     (HashData_t* data);
+static Hash_t HashRorSimple    (HashData_t* data);
+static Hash_t HashRorInlineAsm (HashData_t* data);
 
 #ifndef SECOND_OPTIMIZATION
-    Hash_t HashCRC32 (HashData_t* data) { return HashCRC32Simple (data); }
+Hash_t HashCRC32 (HashData_t* data) { return HashCRC32Simple (data); }
 #else 
-    Hash_t HashCRC32 (HashData_t* data) { return HashCRC32AVX (data); }
+Hash_t HashCRC32 (HashData_t* data) { return HashCRC32AVX (data); }
 #endif
 
-Hash_t
-HashRorSimple (HashData_t* data);
-
-Hash_t
-HashRorInlineAsm (HashData_t* data);
-
 #ifndef THIRD_OPTIMIZATION
-    Hash_t HashRor (HashData_t* data) { return HashRorSimple (data); }
+Hash_t HashRor (HashData_t* data) { return HashRorSimple (data); }
 #else 
-    Hash_t HashRor (HashData_t* data) { return HashRorInlineAsm (data); }
+Hash_t HashRor (HashData_t* data) { return HashRorInlineAsm (data); }
 #endif
 
 Hash_t 
 HashReturn0 (HashData_t* data)
 {
+    assert (data); /////////////////////////////////
     assert (GetElemCharPtr (data));
 
     return 0;
@@ -50,7 +42,13 @@ HashStrlen (HashData_t* data)
 {
     assert (GetElemCharPtr (data));
 
-    return (Hash_t)MyStrlen (data);
+    Hash_t len = 0;
+    while (GetElemCharPtr (data)[len] != 0) 
+    {
+        len++;
+    }
+
+    return len;
 }
 
 Hash_t 
@@ -58,10 +56,8 @@ HashSumLetterASCII (HashData_t* data)
 {
     assert (GetElemCharPtr (data));
 
-    size_t len = MyStrlen (data);
     Hash_t sum = 0;
-
-    for (size_t i = 0; i < len; i++)
+    for (size_t i = 0; GetElemCharPtr (data)[i] != 0; i++)
     {
         sum += (Hash_t)(GetElemCharPtr (data)[i]);
     }
@@ -71,7 +67,7 @@ HashSumLetterASCII (HashData_t* data)
 
 /** https://gcc.gnu.org/onlinedocs/gcc/Extended-Asm.html */
 
-Hash_t 
+static Hash_t 
 HashRorSimple (HashData_t* data)
 {
     assert (GetElemCharPtr (data));
@@ -87,14 +83,18 @@ HashRorSimple (HashData_t* data)
     return hash;
 }
 
-Hash_t 
+static Hash_t 
 HashRorInlineAsm (HashData_t* data)
 {
     assert (GetElemCharPtr (data));
 
     Hash_t hash = 0;
     char* str = GetElemCharPtr (data);
-    
+
+
+//
+// Godbolt edition:
+// Link: 
 //     __asm__ (
 //         ".intel_syntax noprefix\n\n\n\n\n\t"
 
@@ -157,10 +157,8 @@ HashRol (HashData_t* data)
 {
     assert (GetElemCharPtr (data));
 
-    size_t len = MyStrlen (data);
     Hash_t hash = (Hash_t)GetElemCharPtr (data)[0];
-    
-    for (size_t i = 1; i < len; i++)
+    for (size_t i = 1; GetElemCharPtr (data)[i] != 0; i++)
     {
         hash = ((hash << 1) | (hash >> (CHAR_BIT * sizeof(Hash_t) - 1))) 
                 ^ (Hash_t)(GetElemCharPtr (data)[i]);
@@ -169,18 +167,7 @@ HashRol (HashData_t* data)
     return hash;
 }
 
-static size_t 
-MyStrlen (HashData_t* data)
-{
-    assert (GetElemCharPtr (data));
-
-    size_t i = 0;
-    while (GetElemCharPtr (data)[i] != 0) i++;
-
-    return i;
-}
-
-const unsigned int CRC32Table[] = 
+static const unsigned int CRC32Table[] = 
 {
   0x00000000, 0x04c11db7, 0x09823b6e, 0x0d4326d9,
   0x130476dc, 0x17c56b6b, 0x1a864db2, 0x1e475005,
@@ -248,7 +235,7 @@ const unsigned int CRC32Table[] =
   0xbcb4666d, 0xb8757bda, 0xb5365d03, 0xb1f740b4
 };
 
-Hash_t 
+static Hash_t 
 HashCRC32Simple (HashData_t* data)
 {
     assert (GetElemCharPtr (data));
@@ -262,10 +249,10 @@ HashCRC32Simple (HashData_t* data)
     return (Hash_t)~hash;
 }
 
-Hash_t 
+static Hash_t 
 HashCRC32AVX (HashData_t* data)
 {
     assert (GetElemCharPtr (data));
 
-    return CRC32ASM (GetElemCharPtr (data));
+    return HashCRC32Asm (GetElemCharPtr (data));
 }

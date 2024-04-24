@@ -1,4 +1,4 @@
 make simple
-make union
+# make union
 make simple-avx
-make union-avx
+# make union-avx

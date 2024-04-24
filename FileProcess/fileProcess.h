@@ -17,16 +17,12 @@ struct File
     size_t      nStrings;
 };
 
-File*
-STL_Fread (const char* nameFile);
+void Fread (File* file);
 
-File* 
-FileProcess (const char* nameFile);
+void FileProcess (File* file);
 
-void 
-STL_Fprint (const char* nameFile, struct File* file);
+void Fprint (const char* nameFile, struct File* file);
 
-File*
-STL_Fclose (struct File* file);
+void Fclose (struct File* file);
 
 #endif /* STL_file_process_ */

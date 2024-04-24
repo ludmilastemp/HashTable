@@ -1,10 +1,9 @@
 
-global CRC32ASM
+global HashCRC32Asm
 
 section .text
-CRC32ASM:
-
-;       movzx   edx, BYTE [rdi]      
+HashCRC32Asm:
+   
         mov     eax, -1
 
 .for

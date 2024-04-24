@@ -1,29 +1,24 @@
 #include "fileProcess.h"
 
-File* 
-STL_Fread (const char* nameFile)
+void
+Fread (File* file)
 {
-    assert (nameFile);
+    assert (file);
 
-    FILE* fp = fopen (nameFile, "rb");
-    if (fp == nullptr) return nullptr;
-
-    File* file = (File*) calloc (1, sizeof (File));
-    if (file == nullptr) return nullptr;
+    FILE* fp = fopen (file->name, "rb");
+    if (fp == nullptr) return;
 
     struct stat buff = { 0 };
 
-    file->name = nameFile;
     fstat (fileno (fp), &buff); // error
 
     file->size = (size_t)buff.st_size;
 
-    // file->buffer = (Data_t*) calloc (file->size + 1, sizeof (char));
-    file->buffer = (Data_t*) aligned_alloc (32 /* sizeWord */, (file->size + 1) * sizeof (char));
+    file->buffer = (Data_t*) aligned_alloc (sizeWord, (file->size + 1) * sizeof (char));
     if (file->buffer == nullptr) 
     {
         free (file);
-        return nullptr;
+        return;
     }
 
     file->size = fread ((char*)file->buffer, sizeof (char), file->size, fp);
@@ -31,17 +26,15 @@ STL_Fread (const char* nameFile)
     file->nStrings = file->size / sizeWord;
 
     fclose (fp);
-
-    return file;
 }
 
-File* 
-FileProcess (const char* nameFile)
+void
+FileProcess (File* file)
 {
-    assert (nameFile);
+    assert (file);
 
-    File* file = STL_Fread (nameFile);
-    if (file == nullptr) return nullptr;
+    Fread (file);
+    if (file->buffer == nullptr) return;
 
     file->nStrings = 0;
     
@@ -49,7 +42,7 @@ FileProcess (const char* nameFile)
     char* ptr = (char*)file->buffer;
 
     Data_t* buffer = (Data_t*) calloc (sizeBuffer, sizeof (Data_t));
-    if (buffer == nullptr) return nullptr;
+    if (buffer == nullptr) return;
     
     for (int iBuf = 0; ptr != (char*)file->buffer + file->size - 1; 
          file->nStrings++)
@@ -65,8 +58,7 @@ FileProcess (const char* nameFile)
             if (tmp == nullptr) 
             {
                 free (buffer);
-                STL_Fclose (file);
-                return nullptr;
+                return;
             }
             buffer = tmp;
         }
@@ -114,12 +106,11 @@ FileProcess (const char* nameFile)
     free (file->buffer);
     file->buffer = buffer;
     file->nStrings--;
-
-    return file;
 }
 
 void 
-STL_Fprint (const char* nameFile, struct File* file)
+Fprint (const char* nameFile, 
+        struct File* file)
 {
     assert (nameFile);
     assert (file);
@@ -140,18 +131,14 @@ STL_Fprint (const char* nameFile, struct File* file)
     fclose (fp);
 }
 
-File* 
-STL_Fclose (struct File* file)
+void 
+Fclose (struct File* file)
 {
-    if (file == nullptr) return 0;
+    if (file == nullptr) return;
     
     if (file->buffer) free (file->buffer);
     file->buffer   = nullptr;
     file->name     = nullptr;
     file->size     = 0;
     file->nStrings = 0;
-
-    free (file);
-
-    return nullptr;
 }

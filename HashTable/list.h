@@ -13,7 +13,7 @@ typedef Data_t Elem_t;
 
 struct List
 {
-    Elem_t** data;
+    Elem_t** data; // fe ;(
 
     size_t capacity;
     size_t size;
@@ -24,21 +24,12 @@ struct List
     static const int    ELEM_NOT_FOUND         = -1;
 };
     
-List*
-ListStructCtor ();
+void ListStructCtor (List* list);
+void ListStructDtor (List* list);
 
-void
-ListStructDtor (List* list);
+Index_t ListInsert   (List* list, Data_t* data);
+Index_t ListFindElem (List* list, Data_t* data);
 
-Index_t
-ListInsert (List* list,
-            Data_t* data);
-
-Index_t 
-ListFindElem (List* list, 
-              Data_t* data);
-
-void
-ListStructDump (List* list);
+void ListStructDump (List* list);
 
 #endif /* STL_list_ */

@@ -3,8 +3,6 @@
 
 #include <limits.h>
 #include "hashTable.h"
-         
-const int nHashFunc = 7; 
 
 Hash_t HashReturn0        (HashData_t* data);
 Hash_t HashLetterASCII    (HashData_t* data);
