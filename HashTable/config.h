@@ -5,10 +5,13 @@
 #include <emmintrin.h>
 #include <nmmintrin.h>
 
-typedef __m256i avx_t;
-// typedef __m128i Wide_t SIMD_t???; Vector_t VectorData_t???
+typedef __m256i Vector_t; 
 
-const size_t sizeHashTable = 911; // hashTableSize
-const int    sizeWord = sizeof (avx_t); // vectorSize? hashTableWordSize??
+const size_t hashTableSize    = 911; 
+const int    hashTableKeySize = sizeof (Vector_t); 
+const bool   useDefaultText   = true;
+const char   defaultText[]    = "text.txt";
+const int    nMeasurements    = 3;
+const bool   measurements     = false;
     
 #endif /* STL_config */

@@ -2,30 +2,25 @@
 #define STL_hash_table_
 
 #include "list.h"
-
-typedef unsigned long long Hash_t;
-typedef Data_t HashData_t;
-typedef Hash_t (*HashFunc_t)(HashData_t* data);
+#include "hashs.h"
 
 struct HashTable
 {
-    size_t capacity; // n_lists nLists
-    List* list; // lists, list_array, chains
+    size_t nLists;
+    List* lists; 
     
-    HashFunc_t HashFunc; // hashFunc 
+    HashFunc_t hashFunc;
 
-    size_t nDuplicateElem; // nDuplicatedElem___s____  
-    size_t nUniqueElem;    // --//--
+    size_t nDuplicateElems;
+    size_t nUniqueElems;    
 };
 
-void HashTableCtor (HashTable* HashTable, size_t capacity, HashFunc_t HashFunc);
+void HashTableCtor (HashTable* HashTable, size_t nLists, HashFunc_t HashFunc);
 void HashTableDtor (HashTable* hashTable);
 
 Index_t HashTableInsert (HashTable* hashTable, Data_t* data);
 
-// size of word --> word size
-// name of file --> file name 
-void HashTableDumpListsToFile (HashTable* hashTable, const char* nameFile); // fileName
+void HashTableDumpListsToFile (HashTable* hashTable, int nHashFunc); 
 void HashTableDump (HashTable* hashTable);
 
 #endif /* STL_hash_table_ */

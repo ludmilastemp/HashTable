@@ -1,9 +1,5 @@
-#ifndef STL_realize
-#define STL_realize
-
-// dataAccessors.h
-// accessors.h
-// your ideas!!! :DDDDDDDDDDDD
+#ifndef STL_dataAccessors
+#define STL_dataAccessors
 
 #include <immintrin.h>
 #include <emmintrin.h>
@@ -12,23 +8,23 @@
 
 union Word
 {
-    avx_t avx; // Avx_t --> 
-    char str[sizeWord];
+    Vector_t avx;  
+    char str[hashTableKeySize];
 };
 
 #ifdef UNION
 typedef Word Data_t;   
 #else
-typedef char Data_t[sizeWord];
+typedef char Data_t[hashTableKeySize];
 #endif
 
 inline char*
 GetElemPtr (void* buffer, int nElem, int len)
 {
 #ifdef UNION
-    return &((Data_t*)buffer)[nElem + len / sizeWord].str[len % sizeWord];
+    return &((Data_t*)buffer)[nElem + len / hashTableKeySize].str[len % hashTableKeySize];
 #else 
-    return &((char*)buffer)[nElem * sizeWord + len];
+    return &((char*)buffer)[nElem * hashTableKeySize + len];
 #endif
 }
 
@@ -42,15 +38,15 @@ GetElemCharPtr (Data_t* data)
 #endif
 }
 
-inline avx_t
+inline Vector_t
 GetElemAvx (Data_t* data)
 {
 #ifdef UNION
     return data->avx;
 #else 
-    return _mm256_load_si256 ((avx_t*)data);
+    return _mm256_load_si256 ((Vector_t*)data);
 #endif
 }
 
 
-#endif /* STL_realize */
+#endif /* STL_dataAccessors */

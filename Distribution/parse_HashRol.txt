@@ -1,0 +1,3 @@
+mean = 9
+variance = 12
+relative variance = 1

@@ -2,29 +2,28 @@
 
 void
 HashTableCtor (HashTable* hashTable, 
-               size_t capacity, 
+               size_t nLists, 
                HashFunc_t HashFunc)
 {
     assert (hashTable);
 
-    // LIFE HOOK: memset( hashTable, sizeof(HashTable), 0);
-    hashTable->HashFunc       = HashFunc;
-    hashTable->capacity       = capacity;
-    hashTable->nDuplicateElem = 0;
-    hashTable->nUniqueElem    = 0;
+    memset (hashTable, 0, sizeof(HashTable));
 
+    hashTable->hashFunc        = HashFunc;
+    hashTable->nLists          = nLists;
+    hashTable->nDuplicateElems = 0;
+    hashTable->nUniqueElems    = 0;
 
     /**
-     * Filling in the hash table header
-     * ? Fill hash table header
+     * Fill hash table header
      */
     {
-        hashTable->list = (List*) calloc (capacity, sizeof (List));
-        if (hashTable->list == nullptr) return;
+        hashTable->lists = (List*) calloc (nLists, sizeof (List));
+        if (hashTable->lists == nullptr) return;
 
-        for (size_t i = 0; i < capacity; i++)
+        for (size_t i = 0; i < nLists; i++)
         {
-            ListStructCtor (&hashTable->list[i]);
+            ListStructCtor (&hashTable->lists[i]);
         }
     }
 }
@@ -34,18 +33,18 @@ HashTableDtor (HashTable* hashTable)
 {
     if (hashTable == nullptr) return;
 
-    for (size_t i = 0; i < hashTable->capacity; i++)
+    for (size_t i = 0; i < hashTable->nLists; i++)
     {
-        ListStructDtor (&hashTable->list[i]);
+        ListStructDtor (&hashTable->lists[i]);
     }
 
-    free (hashTable->list);
+    free (hashTable->lists);
     
-    hashTable->list           = nullptr;
-    hashTable->HashFunc       = nullptr;
-    hashTable->capacity       = 0;
-    hashTable->nDuplicateElem = 0;
-    hashTable->nUniqueElem    = 0;
+    hashTable->lists           = nullptr;
+    hashTable->hashFunc        = nullptr;
+    hashTable->nLists          = 0;
+    hashTable->nDuplicateElems = 0;
+    hashTable->nUniqueElems    = 0;
 }
 
 Index_t 
@@ -55,15 +54,15 @@ HashTableInsert (HashTable* hashTable,
     assert (hashTable);
     assert (data);
     
-    Index_t indexList = (Index_t)(hashTable->HashFunc (data) % hashTable->capacity); 
-    hashTable->nDuplicateElem++;   
+    Index_t indexList = (Index_t)(hashTable->hashFunc (data) % hashTable->nLists); 
+    hashTable->nDuplicateElems++;   
 
-    int indexElem = ListFindElem (&hashTable->list[indexList], data);
+    int indexElem = ListFindElem (&hashTable->lists[indexList], data);
 
     if (indexElem == List::ELEM_NOT_FOUND)    
     {
-        hashTable->nUniqueElem++;
-        ListInsert (&hashTable->list[indexList], data);
+        hashTable->nUniqueElems++;
+        ListInsertElem (&hashTable->lists[indexList], data);
     }
 
     return indexList;
@@ -71,17 +70,19 @@ HashTableInsert (HashTable* hashTable,
 
 void 
 HashTableDumpListsToFile (HashTable* hashTable, 
-                          const char* nameFile)
+                          int nHashFunc)
 {
     assert (hashTable);
-    assert (nameFile);
 
-    FILE* fp = fopen (nameFile, "w");
+    char fileDumpName[100] = { 0 };
+    sprintf (fileDumpName, "Distribution/%s.txt", hashFuncDescription[nHashFunc]);
+
+    FILE* fp = fopen (fileDumpName, "w");
     if (fp == nullptr) return; 
 
-    for (size_t i = 0; i < hashTable->capacity; i++)
+    for (size_t i = 0; i < hashTable->nLists; i++)
     {
-        fprintf (fp, "%lu\n", hashTable->list[i].size);
+        fprintf (fp, "%lu\n", hashTable->lists[i].size);
     }
 
     fclose (fp);
@@ -94,12 +95,12 @@ HashTableDump (HashTable* hashTable)
     
     printf ("\n\n!!!       HashTableDump      !!!\n");
 
-    for (size_t i = 0; i < hashTable->capacity; i++)
+    for (size_t i = 0; i < hashTable->nLists; i++)
     {
         printf ("list %lu\n", i);                      
-        if (hashTable->list[i].size != 0)
+        if (hashTable->lists[i].size != 0)
         {
-            ListStructDump (&hashTable->list[i]);
+            ListStructDump (&hashTable->lists[i]);
             printf ("\n\n\n");
         }
     }

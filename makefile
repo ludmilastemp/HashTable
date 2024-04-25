@@ -1,64 +1,58 @@
 
-FLAGS_OPT = -O3
+FLAGS_OPT =
 
-fileProcess:
-	g++ FileProcess/main.cpp   				\
-		FileProcess/fileProcess.cpp   		\
-		$(FLAGS_OPT) $(FLAGS_AVX) $(FLAGS)	\
-		-o fileProcess.exe
+SOURCES = main.cpp								\
+		HashTable/list.cpp            			\
+		HashTable/hashTable.cpp       			\
+		HashTable/hashs.cpp       				\
+		hashs-asm.o								\
+		FileProcess/fileProcess.cpp   			\
+		FileProcess/bufferPreparate.cpp   		\
+		ResultProcess/measureProcess.cpp   		\
+		ResultProcess/measureDistribution.cpp	\
+		ResultProcess/plotBuild.cpp		  	
 
-simple: hashs-asm.o
-	g++ main.cpp							\
-		HashTable/list.cpp            		\
-		HashTable/hashTable.cpp       		\
-		HashTable/hashs.cpp       			\
-		hashs-asm.o							\
-		FileProcess/fileProcess.cpp   		\
-		$(FLAGS_OPT) $(FLAGS_AVX) $(FLAGS)	\
-		-o simple.exe
+hashTable_0: hashs-asm.o
+	g++ $(SOURCES) $(FLAGS)					\
+		-o hashTable_0.exe
+
+hashTable_1: hashs-asm.o
+	g++ $(SOURCES) $(FLAGS)	-O3				\
+		-o hashTable_1.exe
+
+hashTable_2: hashs-asm.o
+	g++ $(SOURCES) $(FLAGS)	-O3				\
+		-DFIRST_OPTIMIZATION				\
+		-o hashTable_2.exe
+
+hashTable_3: hashs-asm.o
+	g++ $(SOURCES) $(FLAGS)	-O3				\
+		-DFIRST_OPTIMIZATION				\
+		-DSECOND_OPTIMIZATION				\
+		-o hashTable_3.exe
+
+hashTable_4: hashs-asm.o
+	g++ $(SOURCES) $(FLAGS)	-O3				\
+		-DFIRST_OPTIMIZATION				\
+		-DSECOND_OPTIMIZATION				\
+		-DTHIRD_OPTIMIZATION				\
+		-o hashTable_4.exe
 		
 union: hashs-asm.o
-	g++ main.cpp					  		\
-		HashTable/list.cpp            		\
-		HashTable/hashTable.cpp       		\
-		HashTable/hashs.cpp       			\
-		hashs-asm.o							\
-		FileProcess/fileProcess.cpp   		\
-		$(FLAGS_OPT) $(FLAGS_AVX) $(FLAGS)	\
+	g++ $(SOURCES) $(FLAGS)					\
 		-DUNION								\
 		-o union.exe
-
-simple-avx: hashs-asm.o
-	g++ main.cpp							\
-		HashTable/list.cpp            		\
-		HashTable/hashTable.cpp       		\
-		HashTable/hashs.cpp       			\
-		hashs-asm.o							\
-		FileProcess/fileProcess.cpp   		\
-		$(FLAGS_OPT) $(FLAGS_AVX) $(FLAGS)	\
-		-DFIRST_OPTIMIZATION				\
-		-DSECOND_OPTIMIZATION				\
-		-DTHIRD_OPTIMIZATION				\
-		-o simple-avx.exe
-		
-union-avx: hashs-asm.o
-	g++ main.cpp					  		\
-		HashTable/list.cpp            		\
-		HashTable/hashTable.cpp       		\
-		HashTable/hashs.cpp       			\
-		hashs-asm.o							\
-		FileProcess/fileProcess.cpp   		\
-		$(FLAGS_OPT) $(FLAGS_AVX) $(FLAGS)	\
-		-DUNION								\
-		-DFIRST_OPTIMIZATION				\
-		-DSECOND_OPTIMIZATION				\
-		-DTHIRD_OPTIMIZATION				\
-		-o union-avx.exe
 
 hashs-asm.o: HashTable/crc32.asm
 	nasm -f elf64 HashTable/crc32.asm -o hashs-asm.o
 
-.PHONY: simple union simple-avx union-avx
+makedirs:
+	mkdir -p Distribution /				\
+			 Measurements /				\
+			 Plot-py /					\
+			 img /
+
+.PHONY: simple union simple-avx union-avx makedirs
 
  FLAGS_AVX = -mmmx						\
  		-msse 							\
@@ -68,11 +62,8 @@ hashs-asm.o: HashTable/crc32.asm
 		-msse4.2 						\
 		-mavx 							\
 		-mavx2 							
- 
-#-fsanitize=leak # тут сидит выравнивание 	\
-		-fsanitize=leak								\
 
-FLAGS = 											\
+FLAGS =  $(FLAGS_OPT) $(FLAGS_AVX) 					\
 		-D											\
 		_DEBUG										\
 		-ggdb3										\

@@ -1,59 +1,12 @@
 #include "list.h"
 
-enum ListError_t
-{
-    kSuccess      = 0,
-    kNoMemory     = -0xDED,
-    kInvalidIndex = -0xBAD,
-    //....
-};
-
-const char*
-ListGetErrorString( ListError_t error)
-{
-    switch ( error )
-    {
-    case kNoMemory:
-        return "Not enough memory\n";
-    case kInvalidIndex:
-        return "Invalid index\n";
-    //    ...
-
-    // #include
-    }
-}
-
-// LIST_ERROR( kNoMemory,     -0xDED, "Not enough memory")
-// LIST_ERROR( kInvalidIndex, -0xBAD, "Bad index")
-// LIST_ERROR( kNoMemory, -0xDED, "Not enough memory")
-// LIST_ERROR( kNoMemory, -0xDED, "Not enough memory")
-
-
-// _t??
-enum StatusCalloc
+enum StatusCalloc_t
 {
     OK_CALLOC    = 0,
     ERROR_CALLOC = 1,
 };
 
-
-
-static ListError_t ListStructRealloc (List *list);
-
-static StatusCalloc ListStructRealloc (List *list);
-
-// Index_t idx = ListFindElemAvx()
-// if ( idx == kNotFound )
-// {
-//    
-// }
-// if ( ListIsError(idx) )
-// { printf( ... ListGetErrorString(idx)); }
-
-bool ListIsError(int error)
-{
-    return error < 0;
-}
+static StatusCalloc_t ListStructRealloc (List *list);
 
 static Index_t ListFindElemStrcmp (List* list, Data_t* data);
 static Index_t ListFindElemAVX    (List* list, Data_t* data); 
@@ -69,6 +22,7 @@ ListStructCtor (List* list)
 {
     assert (list);
 
+    memset (list, 0, sizeof(List));
     list->capacity = List::LIST_INITIAL_CAPACITY;
 
     if (ListStructRealloc (list) == ERROR_CALLOC) 
@@ -96,7 +50,7 @@ ListStructDtor (List* list)
 }
 
 Index_t
-ListInsert/*Elem*/ (List* list, Data_t* data)
+ListInsertElem (List* list, Data_t* data)
 {
     assert (list);
     
@@ -123,7 +77,7 @@ ListFindElemStrcmp (List* list,
 
     for (size_t i = 0; i < list->size; i++)
     {
-        if (strncmp (GetElemCharPtr (data), GetElemCharPtr(list->data[i]), sizeWord) == 0)
+        if (strncmp (GetElemCharPtr (data), GetElemCharPtr(list->data[i]), hashTableKeySize) == 0)
 	    {
             return (int)i;
 	    }
@@ -139,8 +93,8 @@ ListFindElemAVX (List* list,
     assert (list);
     assert (data);
 
-    avx_t value = GetElemAvx (data);
-    avx_t mAll1 = _mm256_set1_epi16 ((short)0xffff);
+    Vector_t value = GetElemAvx (data);
+    Vector_t mAll1 = _mm256_set1_epi16 ((short)0xffff);
     
     for (size_t i = 0; i < list->size; i++)
     { 
@@ -182,7 +136,7 @@ ListStructDump (List* list)
     printf ("\n");
 }
 
-static StatusCalloc 
+static StatusCalloc_t 
 ListStructRealloc (List *list)
 {
     assert (list);

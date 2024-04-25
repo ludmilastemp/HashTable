@@ -6,14 +6,14 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "config.h" 
-#include "realize.h" 
+#include "dataAccessors.h" 
 
 typedef int Index_t;
 typedef Data_t Elem_t;
 
 struct List
 {
-    Elem_t** data; // fe ;(
+    Elem_t** data; // fe // Elem_t** or memcpy - ???
 
     size_t capacity;
     size_t size;
@@ -27,8 +27,8 @@ struct List
 void ListStructCtor (List* list);
 void ListStructDtor (List* list);
 
-Index_t ListInsert   (List* list, Data_t* data);
-Index_t ListFindElem (List* list, Data_t* data);
+Index_t ListInsertElem (List* list, Data_t* data);
+Index_t ListFindElem   (List* list, Data_t* data);
 
 void ListStructDump (List* list);
 

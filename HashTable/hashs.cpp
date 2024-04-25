@@ -1,6 +1,5 @@
 #include "hashs.h"
 
-// -flto link time optimization
 extern "C" Hash_t HashCRC32Asm (const char* data);
 
 static Hash_t HashCRC32Simple  (HashData_t* data);
@@ -23,7 +22,7 @@ Hash_t HashRor (HashData_t* data) { return HashRorInlineAsm (data); }
 Hash_t 
 HashReturn0 (HashData_t* data)
 {
-    assert (data); /////////////////////////////////
+    assert (data);
     assert (GetElemCharPtr (data));
 
     return 0;
@@ -32,6 +31,7 @@ HashReturn0 (HashData_t* data)
 Hash_t 
 HashLetterASCII (HashData_t* data)
 {
+    assert (data);
     assert (GetElemCharPtr (data));
 
     return (Hash_t)GetElemCharPtr (data)[0];
@@ -40,6 +40,7 @@ HashLetterASCII (HashData_t* data)
 Hash_t 
 HashStrlen (HashData_t* data)
 {
+    assert (data);
     assert (GetElemCharPtr (data));
 
     Hash_t len = 0;
@@ -54,6 +55,7 @@ HashStrlen (HashData_t* data)
 Hash_t 
 HashSumLetterASCII (HashData_t* data)
 {
+    assert (data);
     assert (GetElemCharPtr (data));
 
     Hash_t sum = 0;
@@ -70,6 +72,7 @@ HashSumLetterASCII (HashData_t* data)
 static Hash_t 
 HashRorSimple (HashData_t* data)
 {
+    assert (data);
     assert (GetElemCharPtr (data));
 
     Hash_t hash = 0;
@@ -86,46 +89,48 @@ HashRorSimple (HashData_t* data)
 static Hash_t 
 HashRorInlineAsm (HashData_t* data)
 {
+    assert (data);
     assert (GetElemCharPtr (data));
 
     Hash_t hash = 0;
     char* str = GetElemCharPtr (data);
 
 
-//
-// Godbolt edition:
-// Link: 
-//     __asm__ (
-//         ".intel_syntax noprefix\n\n\n\n\n\t"
+/**
+Godbolt edition:
+Link: 
+    __asm__ (
+        ".intel_syntax noprefix\n\n\t"
 
-//         "mov     rdi, %1\n\t"
-//         "movsx   rdx, BYTE PTR [rdi]\n\t"
-//         "xor     eax, eax\n\t"
-//         "add     rdi, 1\n\t"
-//         "test    dl, dl\n\t"
-//         "je      .L12%=\n"
-// ".L7%=:\n\t"
-//         "ror     rax\n\t"
-//         "add     rdi, 1\n\t"
-//         "xor     rax, rdx\n\t"
-//         "movsx   rdx, BYTE PTR -1[rdi]\n\t"
-//         "test    dl, dl\n\t"
-//         "jne     .L7%=\n\t"
-//         "ret\n"
-// ".L12%=:\n\t"
-//         "ret\n\t"
+        "mov     rdi, %1\n\t"
+        "movsx   rdx, BYTE PTR [rdi]\n\t"
+        "xor     eax, eax\n\t"
+        "add     rdi, 1\n\t"
+        "test    dl, dl\n\t"
+        "je      .L12%=\n"
+".L7%=:\n\t"
+        "ror     rax\n\t"
+        "add     rdi, 1\n\t"
+        "xor     rax, rdx\n\t"
+        "movsx   rdx, BYTE PTR -1[rdi]\n\t"
+        "test    dl, dl\n\t"
+        "jne     .L7%=\n\t"
+        "ret\n"
+".L12%=:\n\t"
+        "ret\n\t"
 
-//         "mov     %0, rax\n\t"
+        "mov     %0, rax\n\t"
 
-//         ".att_syntax\n"
+        ".att_syntax\n"
 
-//         :"=r"(hash)             /// hash = %0
-//         :"r"(str)               /// str = %1 
-//         :"%rax", "%rdi", "%rdx"
-//     );
+        :"=r"(hash)            
+        :"r"(str)              
+        :"%rax", "%rdi", "%rdx"
+    );
+ */
 
     __asm__ (
-        ".intel_syntax noprefix\n\n\n\n\n\t"
+        ".intel_syntax noprefix\n\n\t"
 
         "mov     rdi, %1\n\t"
         "xor     rax, rax\n"
@@ -144,8 +149,8 @@ HashRorInlineAsm (HashData_t* data)
 
         ".att_syntax\n"
 
-        :"=r"(hash)             /// hash = %0
-        :"r"(str)               /// str = %1 
+        :"=r"(hash)             
+        :"r"(str)               
         :"%rax", "%rdi", "%rdx"
     );
 
@@ -155,6 +160,7 @@ HashRorInlineAsm (HashData_t* data)
 Hash_t 
 HashRol (HashData_t* data)
 {
+    assert (data);
     assert (GetElemCharPtr (data));
 
     Hash_t hash = (Hash_t)GetElemCharPtr (data)[0];
@@ -238,6 +244,7 @@ static const unsigned int CRC32Table[] =
 static Hash_t 
 HashCRC32Simple (HashData_t* data)
 {
+    assert (data);
     assert (GetElemCharPtr (data));
 
     unsigned int hash = 0xffffffff;
@@ -252,6 +259,7 @@ HashCRC32Simple (HashData_t* data)
 static Hash_t 
 HashCRC32AVX (HashData_t* data)
 {
+    assert (data);
     assert (GetElemCharPtr (data));
 
     return HashCRC32Asm (GetElemCharPtr (data));

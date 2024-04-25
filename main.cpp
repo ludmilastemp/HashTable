@@ -1,68 +1,83 @@
 #include <stdio.h>
-#include "FileProcess/fileProcess.h"
+#include "FileProcess/bufferPreparate.h"
 #include "HashTable/hashTable.h"
-#include "HashTable/hashs.h"
-#include <immintrin.h>
-    
+
+#include "ResultProcess/plotBuild.h"
+#include "ResultProcess/measureProcess.h"
+#include "ResultProcess/measureDistribution.h"
+
 int main (const int argc, const char** argv)
 {
-    if (argc == 1) return 0; // user message???
-
-    // File file_tmp = { .name = "text.txt" };
-    // FileProcess (&file_tmp);
-    // Fprint ("text.txt-process", &file_tmp);
-
-    File file = { .name = "text.txt-process" };
-    Fread (&file);
-    assert (file.buffer); //errorrrrr???????
-
-    printf ("buffer = %p\n", file.buffer); 
-
-    HashFunc_t hashArray[] = 
+    if (argc == 1) 
     {
-        &HashReturn0,
-        &HashLetterASCII,
-        &HashStrlen,
-        &HashSumLetterASCII
-        &HashRor,
-        &HashRol,
-        &HashCRC32
-    };
-
-    size_t timeBegin = __rdtsc ();
-
-    int iArgc = 2; // for?? torchit + why 2???
-    while (iArgc <= argc)
-    {
-        int hashFunc = (argv[iArgc - 1][0] - '0');
-        if (hashFunc < 0 || hashFunc > sizeof (hashArray) / sizeof (HashFunc_t)) break;
-        iArgc++;
-
-        // printf ("\n\nnHashFunc = %d\n", hashFunc);
-
-        HashTable hashTable = {};
-        HashTableCtor (&hashTable, sizeHashTable, hashArray[hashFunc - 1]);
-
-        /**
-         * Filling the hash table
-         */
-        for (size_t i = 0; i < file.nStrings; i++)
-        {
-            HashTableInsert (&hashTable, &file.buffer[i]);
-        }
-
-        // printf ("nWords = %lu\n", hashTable.nUniqueElem);
-
-        //  HashTableDump (&hashTable);
-
-        HashTableDtor (&hashTable);
+        printf ("Where arguments???\n");
+        return 0;
     }
 
-    size_t timeEnd = __rdtsc ();
+    File file = {};
+    BufferPreparate (argv[1], &file);
 
-    printf ("\n\ntime = %lu\n\n", (timeEnd - timeBegin) / 1000000);
+    FILE* fpMeasurements = nullptr;
+    if (measurements)
+    {
+        char fileMeasurementsName[100] = { 0 };
+        sprintf (fileMeasurementsName, "Measurements/%s.txt", &argv[0][2]);
 
+        fpMeasurements = fopen (fileMeasurementsName, "w");
+        if (fpMeasurements == nullptr) 
+        {
+            Fclose (&file);
+            return 0; 
+        }
+    }
+
+    for (int k = 0; k <= nMeasurements * measurements; k++)
+    {
+        size_t timeBegin = __rdtsc ();
+
+        for (int i = 1; i < argc; i++) 
+        {
+            int hashFunc = (argv[i][0] - '0' - 1);
+            if (0 <= hashFunc && (size_t)hashFunc < sizeof (hashArray) / sizeof (HashFunc_t))
+            {
+
+            // printf ("\n\nHashFunc: number = %d %s\n", hashFunc + 1, hashFuncDescription[hashFunc]);
+
+            HashTable hashTable = {};
+            HashTableCtor (&hashTable, hashTableSize, hashArray[hashFunc]);
+
+            /**
+                * Filling the hash table
+                */
+            for (size_t j = 0; j < file.nStrings; j++)
+            {
+                HashTableInsert (&hashTable, &file.buffer[j]);
+            }
+
+            // printf ("nWords = %lu\n", hashTable.nUniqueElems);
+
+            // HashTableDump (&hashTable);
+            HashTableDumpListsToFile (&hashTable, hashFunc);
+            BuildPlotHashTable (hashFunc);
+            DistributionMeasurements (hashFunc);
+
+            HashTableDtor (&hashTable);
+            }
+        }
+
+        size_t timeEnd = __rdtsc ();
+
+        if (measurements)
+            fprintf (fpMeasurements, "%lu\n", timeEnd - timeBegin);
+    }
+
+    if (measurements)
+    {
+        fclose (fpMeasurements);
+        // ProcessMeasurements (&argv[0][2]);
+    }
+    
     Fclose (&file);
 
-    printf ("Hello meow!\n\n");
+    printf ("Hello meow!\n");
 }

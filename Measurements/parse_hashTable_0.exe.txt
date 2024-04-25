@@ -1,0 +1,3 @@
+mean time = 2599580948
+variance = 836217857151704
+relative variance = 321674

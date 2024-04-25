@@ -1,18 +1,7 @@
 
-# ./simple.exe  5
-# # ./union.exe  7
-# ./simple-avx.exe  5
-# # ./union-avx.exe  7
-
-
-./simple.exe 1 2 3 4 5 6
-# ./union.exe 1 2 3 4 5 6 7
-./simple-avx.exe 1 2 3 4 5 6
-# ./union-avx.exe 1 2 3 4 5 6 7
-
-
-# ./simple.exe 1 2 3 4 5 6 > 1.txt
-# # ./union.exe 1 2 3 4 5 6 7
-# ./simple-avx.exe 1 2 3 4 5 6 > 2.txt
-# # ./union-avx.exe 1 2 3 4 5 6 7
+./hashTable_0.exe text.txt 1 2 3 4 5 6 7
+./hashTable_1.exe text.txt 1 2 3 4 5 6 7
+./hashTable_2.exe text.txt 1 2 3 4 5 6 7
+./hashTable_3.exe text.txt 1 2 3 4 5 6 7
+./hashTable_4.exe text.txt 1 2 3 4 5 6 7
 

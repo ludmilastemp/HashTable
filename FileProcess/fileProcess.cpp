@@ -6,15 +6,17 @@ Fread (File* file)
     assert (file);
 
     FILE* fp = fopen (file->name, "rb");
-    if (fp == nullptr) return;
+    if (fp == nullptr) 
+    {
+        file->error = File::FILE_NOT_FOUND;
+        return;
+    }
 
     struct stat buff = { 0 };
-
     fstat (fileno (fp), &buff); // error
-
     file->size = (size_t)buff.st_size;
 
-    file->buffer = (Data_t*) aligned_alloc (sizeWord, (file->size + 1) * sizeof (char));
+    file->buffer = (Data_t*) aligned_alloc (hashTableKeySize, (file->size + 1) * sizeof (char));
     if (file->buffer == nullptr) 
     {
         free (file);
@@ -23,7 +25,9 @@ Fread (File* file)
 
     file->size = fread ((char*)file->buffer, sizeof (char), file->size, fp);
     ((char*)file->buffer)[file->size] = 0; 
-    file->nStrings = file->size / sizeWord;
+    
+    file->nStrings = file->size / hashTableKeySize;
+    file->error = 0;
 
     fclose (fp);
 }
@@ -38,7 +42,7 @@ FileProcess (File* file)
 
     file->nStrings = 0;
     
-    size_t sizeBuffer = file->size / sizeWord + 1;
+    size_t sizeBuffer = file->size / hashTableKeySize + 1;
     char* ptr = (char*)file->buffer;
 
     Data_t* buffer = (Data_t*) calloc (sizeBuffer, sizeof (Data_t));
@@ -50,7 +54,7 @@ FileProcess (File* file)
         /**
          * Check realloc
          */
-        if (iBuf * sizeWord >= (int)sizeBuffer - sizeWord * 3)
+        if (iBuf * hashTableKeySize >= (int)sizeBuffer - hashTableKeySize * 3)
         {
             sizeBuffer *= 2;
             
@@ -85,9 +89,9 @@ FileProcess (File* file)
         /**
          * Addition of '\0'
          */
-        if (len > sizeWord - 1)
+        if (len > hashTableKeySize - 1)
         {   
-            for (; len < sizeWord * 2; len++)
+            for (; len < hashTableKeySize * 2; len++)
             {
                 *GetElemPtr (buffer, iBuf, len) = 0;
             }
@@ -95,7 +99,7 @@ FileProcess (File* file)
             iBuf++;
         }
 
-        for (; len < sizeWord; len++)
+        for (; len < hashTableKeySize; len++)
         {
             *GetElemPtr (buffer, iBuf, len) = 0;
         }
@@ -109,20 +113,20 @@ FileProcess (File* file)
 }
 
 void 
-Fprint (const char* nameFile, 
+Fprint (const char* fileName, 
         struct File* file)
 {
-    assert (nameFile);
+    assert (fileName);
     assert (file);
 
-    FILE* fp = fopen (nameFile, "wb");
+    FILE* fp = fopen (fileName, "wb");
     if (fp == nullptr) return;
 
     for (size_t i = 0; i < file->nStrings; i++)
     {
         char* str = GetElemCharPtr (&file->buffer[i]);
 
-        for (size_t j = 0; j < sizeWord; j++)
+        for (size_t j = 0; j < hashTableKeySize; j++)
         {
             fprintf (fp, "%c", str[j]); 
         }
